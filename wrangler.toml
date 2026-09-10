@@ -1,0 +1,25 @@
+compatibility_flags = ["nodejs_compat"]
+name = "logging-platform"
+main = "worker/src/index.ts"
+compatibility_date = "2024-03-20"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "logs-db"
+database_id = "00000000-0000-0000-0000-000000000000"
+
+[[r2_buckets]]
+binding = "LOG_BUCKET"
+bucket_name = "logs-bucket"
+
+[durable_objects]
+bindings = [
+  { name = "REALTIME", class_name = "RealtimeLogStream" }
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["RealtimeLogStream"]
+
+[vars]
+BETTER_AUTH_URL = "http://localhost:3000"

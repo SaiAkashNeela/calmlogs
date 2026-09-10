@@ -1,0 +1,6 @@
+{
+  "name": "Realtime Logging Platform",
+  "description": "A self-hosted-style realtime logging dashboard using Cloudflare infrastructure.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
