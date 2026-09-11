@@ -3,6 +3,8 @@ export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 export interface LogEvent {
   project: string;
   service: string;
+  project_id?: string;
+  service_id?: string;
   level: LogLevel;
   event: string;
   message: string;

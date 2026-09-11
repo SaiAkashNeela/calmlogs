@@ -27,9 +27,11 @@ type ConnectionState = 'CONNECTING' | 'LIVE' | 'RECONNECTING' | 'DISCONNECTED';
 interface LogViewerProps {
   projectId: string;
   serviceId: string;
+  projectName?: string;
+  serviceName?: string;
 }
 
-export default function LogViewer({ projectId, serviceId }: LogViewerProps) {
+export default function LogViewer({ projectId, serviceId, projectName, serviceName }: LogViewerProps) {
   const [logs, setLogs] = useState<LogEvent[]>([]);
   const [connectionState, setConnectionState] = useState<ConnectionState>('CONNECTING');
   const [isPaused, setIsPaused] = useState(false);
@@ -167,7 +169,9 @@ export default function LogViewer({ projectId, serviceId }: LogViewerProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `calmlogs-${projectId}-${serviceId}-${Date.now()}.jsonl`;
+    const pTag = (projectName || projectId).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const sTag = (serviceName || serviceId).replace(/[^a-zA-Z0-9_-]/g, '_');
+    a.download = `calmlogs-${pTag}-${sTag}-${Date.now()}.jsonl`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -189,6 +193,13 @@ export default function LogViewer({ projectId, serviceId }: LogViewerProps) {
               <span className="font-mono text-xs font-semibold text-zinc-900 uppercase tracking-wider">
                 Live Stream
               </span>
+              {(projectName || serviceName) && (
+                <div className="hidden sm:flex items-center gap-1.5 text-xs font-mono text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded border border-zinc-200">
+                  <span className="font-semibold text-zinc-900">{projectName || projectId}</span>
+                  <span className="text-zinc-400">/</span>
+                  <span className="text-zinc-700">{serviceName || serviceId}</span>
+                </div>
+              )}
               <ConnectionStatusBadge state={connectionState} isPaused={isPaused} />
             </div>
 
@@ -444,8 +455,36 @@ export default function LogViewer({ projectId, serviceId }: LogViewerProps) {
               <div className="grid grid-cols-2 gap-2">
                 <InspectorProperty label="Timestamp" value={format(new Date(selectedLog.timestamp), 'yyyy-MM-dd HH:mm:ss.SSS')} />
                 <InspectorProperty label="Level" value={selectedLog.level.toUpperCase()} />
-                <InspectorProperty label="Project" value={selectedLog.project} />
-                <InspectorProperty label="Service" value={selectedLog.service} />
+                <InspectorProperty
+                  label="Project"
+                  value={
+                    (selectedLog.project && !selectedLog.project.startsWith('proj_'))
+                      ? selectedLog.project
+                      : (projectName || selectedLog.project || projectId)
+                  }
+                />
+                <InspectorProperty
+                  label="Service"
+                  value={
+                    (selectedLog.service && !selectedLog.service.startsWith('serv_'))
+                      ? selectedLog.service
+                      : (serviceName || selectedLog.service || serviceId)
+                  }
+                />
+                {(selectedLog.project_id || (selectedLog.project?.startsWith('proj_') ? selectedLog.project : projectId)) && (
+                  <InspectorProperty
+                    label="Project ID"
+                    value={selectedLog.project_id || (selectedLog.project?.startsWith('proj_') ? selectedLog.project : projectId)}
+                    copyable
+                  />
+                )}
+                {(selectedLog.service_id || (selectedLog.service?.startsWith('serv_') ? selectedLog.service : serviceId)) && (
+                  <InspectorProperty
+                    label="Service ID"
+                    value={selectedLog.service_id || (selectedLog.service?.startsWith('serv_') ? selectedLog.service : serviceId)}
+                    copyable
+                  />
+                )}
                 {selectedLog.request_id && (
                   <InspectorProperty label="Request ID" value={selectedLog.request_id} copyable />
                 )}

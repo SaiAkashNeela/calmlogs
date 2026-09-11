@@ -214,6 +214,7 @@ export default function App() {
   }
 
   const activeProject = projects.find(p => p.id === activeProjectId);
+  const activeService = services.find(s => s.id === activeServiceId);
   const activeProjectServices = activeProjectId ? services.filter(s => s.project_id === activeProjectId) : [];
   const isWrite = currentUserRole === 'write';
 
@@ -254,7 +255,12 @@ export default function App() {
       {/* Main Viewport */}
       <main className="flex-1 flex flex-col min-w-0 bg-[#fbfbfa]">
         {activeProjectId && activeServiceId ? (
-          <LogViewer projectId={activeProjectId} serviceId={activeServiceId} />
+          <LogViewer
+            projectId={activeProjectId}
+            serviceId={activeServiceId}
+            projectName={activeProject?.name}
+            serviceName={activeService?.name}
+          />
         ) : projects.length === 0 ? (
           /* Empty Workspace State */
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[#fbfbfa]">

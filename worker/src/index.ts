@@ -100,8 +100,8 @@ export class RealtimeLogStream extends DurableObject {
     this.buffer = [];
     this.currentSegmentSize = 0;
     
-    const project = logs[0].project;
-    const service = logs[0].service;
+    const projectId = (logs[0] as any).project_id || logs[0].project;
+    const serviceId = (logs[0] as any).service_id || logs[0].service;
     
     const date = new Date();
     const year = date.getUTCFullYear();
@@ -109,7 +109,7 @@ export class RealtimeLogStream extends DurableObject {
     const day = String(date.getUTCDate()).padStart(2, '0');
     const ts = date.getTime();
     
-    const key = `logs/${project}/${service}/${year}/${month}/${day}/segment-${ts}.jsonl`;
+    const key = `logs/${projectId}/${serviceId}/${year}/${month}/${day}/segment-${ts}.jsonl`;
     const jsonl = logs.map(l => JSON.stringify(l)).join('\n');
     
     try {
@@ -120,8 +120,8 @@ export class RealtimeLogStream extends DurableObject {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
       ).bind(
         `seg_${ts}`, 
-        project, 
-        service, 
+        projectId, 
+        serviceId, 
         key, 
         logs[0].timestamp, 
         logs[logs.length-1].timestamp, 
@@ -378,6 +378,7 @@ export default {
 
           await env.DB.prepare(`INSERT INTO projects (id, organization_id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING`)
             .bind(projId, orgId, rawProj, 'Auto-registered project', now, now).run();
+          project = { id: projId, organization_id: orgId, name: rawProj };
         }
 
         // 2. Resolve service: lookup under this project by exact id OR case-insensitive name
@@ -394,16 +395,22 @@ export default {
              VALUES (?, ?, ?, ?, ?, ?, ?) 
              ON CONFLICT(id) DO UPDATE SET last_seen_at = excluded.last_seen_at`
           ).bind(servId, projId, rawServ, 'api', now, now, now).run();
+          service = { id: servId, name: rawServ };
         } else {
           await env.DB.prepare(`UPDATE services SET last_seen_at = ?, updated_at = ? WHERE id = ?`)
             .bind(now, now, servId).run();
         }
 
-        // 3. Enrich log with canonical IDs so Durable Object indexes properly
+        // 3. Preserve human-readable project and service names and attach canonical IDs
+        const projectName = project?.name || rawProj;
+        const serviceName = service?.name || rawServ;
+
         const enrichedLog: LogEvent = {
           ...body,
-          project: projId!,
-          service: servId!,
+          project: projectName,
+          service: serviceName,
+          project_id: projId!,
+          service_id: servId!,
           timestamp: body.timestamp || now
         };
 
