@@ -122,17 +122,31 @@ export default function CreateServiceModal({
     },
     compose: {
       label: 'Docker Compose',
-      command: `# In docker-compose.yml:
-services:
-  ${servName}:
-    image: your-app-image
-    command: sh -c "your-start-cmd 2>&1 | npx -y calmlogs -p ${projectName} -s ${servName} -k ${apiKey}"`,
-      display: `# In docker-compose.yml:
-services:
-  ${servName}:
-    image: your-app-image
-    command: sh -c "your-start-cmd 2>&1 | npx -y calmlogs -p ${projectName} -s ${servName} -k ${activeKey}"`,
-      desc: 'Pipes your service stdout straight into CalmLogs inside docker-compose.'
+      command: `services:
+  # Add this forwarder service to your docker-compose.yml:
+  calmlogs:
+    image: node:alpine
+    container_name: calmlogs-forwarder
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # networks: [backend_net]  # Included if specified, or captures all services
+    command: >
+      sh -c "apk add --no-cache docker-cli docker-cli-compose &&
+      docker compose logs -f --no-color | npx -y calmlogs --project '${projectName}' --key '${apiKey}'"`,
+      display: `services:
+  # Add this forwarder service to your docker-compose.yml:
+  calmlogs:
+    image: node:alpine
+    container_name: calmlogs-forwarder
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # networks: [backend_net]  # Included if specified, or captures all services
+    command: >
+      sh -c "apk add --no-cache docker-cli docker-cli-compose &&
+      docker compose logs -f --no-color | npx -y calmlogs --project '${projectName}' --key '${activeKey}'"`,
+      desc: 'Drop-in compose service: automatically forwards logs for all containers in your compose stack.'
     },
     frontend: {
       label: 'Frontend',

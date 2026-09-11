@@ -130,8 +130,13 @@ export default function App() {
 
   const handleProjectCreated = async (newProject: any) => {
     await loadProjects();
+    await loadServices();
     setActiveProjectId(newProject.id);
-    setActiveServiceId(null);
+    if (newProject.defaultService?.id) {
+      setActiveServiceId(newProject.defaultService.id);
+    } else {
+      setActiveServiceId(null);
+    }
   };
 
   const handleServiceCreated = async (newService: any) => {

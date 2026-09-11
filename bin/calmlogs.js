@@ -3,6 +3,8 @@ import readline from 'readline';
 import { spawn } from 'child_process';
 import http from 'http';
 import https from 'https';
+import fs from 'fs';
+import path from 'path';
 
 const args = process.argv.slice(2);
 
@@ -21,15 +23,65 @@ function getArg(flags, defaultValue = '') {
   return defaultValue;
 }
 
-const project = getArg(['--project', '-p']);
-const service = getArg(['--service', '-s']);
-const key = getArg(['--key', '-k', '--api-key']);
-const endpoint = getArg(['--endpoint', '-e'], process.env.CALMLOGS_ENDPOINT || 'http://localhost:3000');
+// Auto-detect service from package.json if present
+let detectedService = '';
+let detectedProject = '';
 
-if (!project || !service) {
-  console.error('Usage: <command> | npx calmlogs --project <name> --service <name> [--key <api_key>] [--endpoint <url>]');
-  console.error('   or: npx calmlogs run --project <name> --service <name> [--key <key>] -- <command>');
-  process.exit(1);
+try {
+  const pkgPath = path.resolve(process.cwd(), 'package.json');
+  if (fs.existsSync(pkgPath)) {
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    if (pkg && pkg.name) {
+      detectedService = pkg.name.split('/').pop() || pkg.name;
+    }
+  }
+} catch (_) {}
+
+try {
+  const cwdName = path.basename(process.cwd());
+  if (cwdName) {
+    detectedProject = cwdName;
+  }
+} catch (_) {}
+
+const project = getArg(
+  ['--project', '-p'],
+  process.env.CALMLOGS_PROJECT || process.env.PROJECT_NAME || detectedProject || 'default'
+);
+const service = getArg(
+  ['--service', '-s'],
+  process.env.CALMLOGS_SERVICE || process.env.SERVICE_NAME || process.env.APP_NAME || detectedService || 'app'
+);
+const key = getArg(
+  ['--key', '-k', '--api-key'],
+  process.env.CALMLOGS_KEY || process.env.CALMLOGS_API_KEY || ''
+);
+const endpoint = getArg(
+  ['--endpoint', '-e'],
+  process.env.CALMLOGS_ENDPOINT || 'http://localhost:3000'
+);
+
+const networkFilter = getArg(['--network', '-n']);
+
+// Inform user when project or service were auto-resolved
+const explicitProject = getArg(['--project', '-p']);
+const explicitService = getArg(['--service', '-s']);
+if (!explicitProject || !explicitService) {
+  process.stderr.write(`[calmlogs] Ingesting logs -> project: "${project}", service: "${service}"\n`);
+}
+
+// Parse Docker Compose prefix e.g. "web-1 | ...", "api_1 | ...", "postgres | ..."
+function parseComposeLine(line) {
+  const pipeIdx = line.indexOf('|');
+  if (pipeIdx === -1) return null;
+  const prefix = line.slice(0, pipeIdx).trim();
+  // Compose prefixes contain no whitespace and are reasonably short container/service tags
+  if (!prefix || /\s/.test(prefix) || prefix.length > 60) return null;
+  
+  // Strip container index suffix like -1, _1, -2, _2
+  const cleanService = prefix.replace(/[-_]\d+$/, '');
+  const content = line.slice(pipeIdx + 1).trim();
+  return { service: cleanService, message: content };
 }
 
 const buffer = [];
@@ -69,15 +121,25 @@ function queueLog(line, stream = 'stdout') {
   const trimmed = line.trim();
   if (!trimmed) return;
 
+  let currentService = service;
+  let logContent = trimmed;
+
+  // Auto-detect Docker Compose lines: dynamically map to service & clean message
+  const composeParsed = parseComposeLine(trimmed);
+  if (composeParsed) {
+    currentService = composeParsed.service;
+    logContent = composeParsed.message;
+  }
+
   let event = 'app.log';
   let level = stream === 'stderr' ? 'error' : 'info';
-  let message = trimmed;
-  let metadata = undefined;
+  let message = logContent;
+  let metadata = networkFilter ? { network: networkFilter } : undefined;
 
   // Try parsing JSON if structured
-  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+  if (logContent.startsWith('{') && logContent.endsWith('}')) {
     try {
-      const parsed = JSON.parse(trimmed);
+      const parsed = JSON.parse(logContent);
       if (parsed.level) {
         level = typeof parsed.level === 'string' ? parsed.level.toLowerCase() : (parsed.level >= 50 ? 'error' : parsed.level >= 40 ? 'warn' : 'info');
       }
@@ -87,13 +149,13 @@ function queueLog(line, stream = 'stdout') {
       if (parsed.event) {
         event = String(parsed.event);
       }
-      metadata = parsed;
+      metadata = metadata ? { ...metadata, ...parsed } : parsed;
     } catch (e) {}
   }
 
   buffer.push({
     project,
-    service,
+    service: currentService,
     level,
     event,
     message,

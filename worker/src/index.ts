@@ -235,7 +235,33 @@ export default {
         const now = new Date().toISOString();
         await env.DB.prepare(`INSERT INTO projects (id, organization_id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`)
           .bind(id, activeOrgId, body.name, body.description || '', now, now).run();
-        return addCors(new Response(JSON.stringify({ id, name: body.name }), { headers: { 'Content-Type': 'application/json' } }));
+
+        let apiKey: string | null = null;
+        let defaultService: any = null;
+
+        if (body.isCompose) {
+          const servId = `serv_${Date.now()}`;
+          const servName = 'compose';
+          apiKey = `cl_live_${crypto.randomUUID().replace(/-/g, '')}`;
+          const keyHash = await sha256Hex(apiKey);
+
+          await env.DB.prepare(
+            `INSERT INTO services (id, project_id, name, type, created_at, updated_at, last_seen_at, ingestion_key_hash) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+          ).bind(servId, id, servName, 'compose', now, now, now, keyHash).run();
+
+          defaultService = { id: servId, name: servName, project_id: id };
+        }
+
+        return addCors(new Response(JSON.stringify({ 
+          id, 
+          name: body.name,
+          description: body.description || '',
+          isCompose: !!body.isCompose,
+          composeNetwork: body.composeNetwork || '',
+          apiKey,
+          defaultService
+        }), { headers: { 'Content-Type': 'application/json' } }));
       }
       if (request.method === 'DELETE') {
         const activeOrgId = session?.session?.activeOrganizationId;
@@ -395,22 +421,53 @@ export default {
 
         const now = new Date().toISOString();
 
+        // Extract auth token if provided
+        const authHeader = request.headers.get("Authorization") || request.headers.get("X-API-Key") || "";
+        const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : authHeader.trim();
+
+        // Check if token matches a registered service API key
+        let keyInfo: { serviceId: string; serviceName: string; projectId: string; projectName: string } | null = null;
+        if (token) {
+          const tokenHash = await sha256Hex(token);
+          const matched = await env.DB.prepare(
+            `SELECT s.id as service_id, s.name as service_name, s.project_id, p.name as project_name 
+             FROM services s 
+             JOIN projects p ON s.project_id = p.id 
+             WHERE s.ingestion_key_hash = ? LIMIT 1`
+          ).bind(tokenHash).first<{ service_id: string; service_name: string; project_id: string; project_name: string }>();
+          if (matched) {
+            keyInfo = {
+              serviceId: matched.service_id,
+              serviceName: matched.service_name,
+              projectId: matched.project_id,
+              projectName: matched.project_name
+            };
+          }
+        }
+
         // Group by project and service
         const groups = new Map<string, { rawProj: string; rawServ: string; items: any[] }>();
         for (const item of logsArray) {
-          const rawProj = typeof item.project === 'string' ? item.project.trim() : '';
-          const rawServ = typeof item.service === 'string' ? item.service.trim() : '';
-          if (!rawProj || !rawServ) continue;
+          let rawProj = typeof item.project === 'string' ? item.project.trim() : '';
+          let rawServ = typeof item.service === 'string' ? item.service.trim() : '';
           
-          const key = `${rawProj}:::${rawServ}`;
-          if (!groups.has(key)) {
-            groups.set(key, { rawProj, rawServ, items: [] });
+          // Auto-resolve missing project or service from API Key
+          if (!rawProj && keyInfo) rawProj = keyInfo.projectName;
+          if (!rawServ && keyInfo) rawServ = keyInfo.serviceName;
+
+          // Safe fallback defaults so logs are never dropped
+          if (!rawProj) rawProj = 'default';
+          if (!rawServ) rawServ = 'app';
+          
+          const groupKey = `${rawProj}:::${rawServ}`;
+          if (!groups.has(groupKey)) {
+            groups.set(groupKey, { rawProj, rawServ, items: [] });
           }
-          groups.get(key)!.items.push(item);
+          groups.get(groupKey)!.items.push(item);
         }
 
         if (groups.size === 0) {
-          return addCors(new Response(JSON.stringify({ error: "Missing project or service in log events" }), { status: 400 }));
+          return addCors(new Response(JSON.stringify({ error: "No valid log events found" }), { status: 400 }));
         }
 
         let totalIngested = 0;
@@ -449,19 +506,21 @@ export default {
 
           if (!service) {
             servId = rawServ.toLowerCase().startsWith('serv_') ? rawServ : `serv_${Date.now()}`;
+            // Inherit project key hash if authenticated with a key for this project
+            const inheritKeyHash = (keyInfo && keyInfo.projectId === projId && token) ? await sha256Hex(token) : null;
             await env.DB.prepare(
-              `INSERT INTO services (id, project_id, name, type, created_at, updated_at, last_seen_at) 
-               VALUES (?, ?, ?, ?, ?, ?, ?) 
+              `INSERT INTO services (id, project_id, name, type, created_at, updated_at, last_seen_at, ingestion_key_hash) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
                ON CONFLICT(id) DO UPDATE SET last_seen_at = excluded.last_seen_at`
-            ).bind(servId, projId, rawServ, 'api', now, now, now).run();
-            service = { id: servId, name: rawServ, ingestion_key_hash: null };
+            ).bind(servId, projId, rawServ, 'api', now, now, now, inheritKeyHash).run();
+            service = { id: servId, name: rawServ, ingestion_key_hash: inheritKeyHash };
           } else {
             // Validate API key if configured
             if (service.ingestion_key_hash) {
-              const authHeader = request.headers.get("Authorization") || request.headers.get("X-API-Key") || "";
-              const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : authHeader.trim();
               const tokenHash = token ? await sha256Hex(token) : "";
-              if (!token || tokenHash !== service.ingestion_key_hash) {
+              const matchesService = token && tokenHash === service.ingestion_key_hash;
+              const matchesProject = keyInfo && keyInfo.projectId === projId;
+              if (!matchesService && !matchesProject) {
                 return addCors(new Response(JSON.stringify({ 
                   error: `Unauthorized: Invalid or missing API key for service '${service.name}'` 
                 }), {
