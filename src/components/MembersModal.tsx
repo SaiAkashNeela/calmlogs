@@ -48,6 +48,7 @@ export default function MembersModal({
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [lastInviteLink, setLastInviteLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [confirmingCancelId, setConfirmingCancelId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && activeOrgId) {
@@ -314,14 +315,37 @@ export default function MembersModal({
                         </button>
 
                         {canManage && (
-                          <button
-                            type="button"
-                            onClick={() => handleCancelInvite(inv.id)}
-                            title="Cancel invitation"
-                            className="p-1 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          confirmingCancelId === inv.id ? (
+                            <div className="flex items-center gap-1 text-[11px] font-mono animate-in fade-in">
+                              <span className="text-rose-600 font-medium">Revoke?</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleCancelInvite(inv.id);
+                                  setConfirmingCancelId(null);
+                                }}
+                                className="px-1.5 py-0.5 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-medium transition-colors"
+                              >
+                                Yes
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmingCancelId(null)}
+                                className="px-1.5 py-0.5 text-zinc-600 hover:text-zinc-900 rounded text-[10px] transition-colors"
+                              >
+                                No
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setConfirmingCancelId(inv.id)}
+                              title="Cancel invitation"
+                              className="p-1 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )
                         )}
                       </div>
                     </div>

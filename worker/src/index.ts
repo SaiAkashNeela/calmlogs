@@ -212,6 +212,30 @@ export default {
           .bind(id, activeOrgId, body.name, body.description || '', now, now).run();
         return addCors(new Response(JSON.stringify({ id, name: body.name }), { headers: { 'Content-Type': 'application/json' } }));
       }
+      if (request.method === 'DELETE') {
+        const activeOrgId = session?.session?.activeOrganizationId;
+        if (!activeOrgId) return addCors(new Response("Requires active organization", { status: 400 }));
+
+        const userId = session?.user?.id;
+        const memberRow = await env.DB.prepare(
+          `SELECT role FROM member WHERE organizationId = ? AND userId = ?`
+        ).bind(activeOrgId, userId).first<{ role: string }>();
+        if (memberRow?.role === 'read') {
+          return addCors(new Response(JSON.stringify({ error: "Read-only access" }), { status: 403 }));
+        }
+
+        const projectId = url.searchParams.get('id');
+        if (!projectId) return addCors(new Response("Missing project id", { status: 400 }));
+
+        const pCheck = await env.DB.prepare(`SELECT id FROM projects WHERE id = ? AND organization_id = ?`).bind(projectId, activeOrgId).first();
+        if (!pCheck) return addCors(new Response("Project not found", { status: 404 }));
+
+        await env.DB.prepare(`DELETE FROM services WHERE project_id = ?`).bind(projectId).run();
+        await env.DB.prepare(`DELETE FROM log_indexes WHERE project_id = ?`).bind(projectId).run();
+        await env.DB.prepare(`DELETE FROM projects WHERE id = ?`).bind(projectId).run();
+
+        return addCors(new Response(JSON.stringify({ success: true, id: projectId }), { headers: { 'Content-Type': 'application/json' } }));
+      }
     }
 
     if (url.pathname.startsWith('/api/services')) {
@@ -257,6 +281,32 @@ export default {
         await env.DB.prepare(`INSERT INTO services (id, project_id, name, type, created_at, updated_at, last_seen_at) VALUES (?, ?, ?, ?, ?, ?, ?)`)
           .bind(servId, projectId, name, type || 'api', now, now, now).run();
         return addCors(new Response(JSON.stringify({ id: servId, project_id: projectId, name }), { headers: { 'Content-Type': 'application/json' } }));
+      }
+      if (request.method === 'DELETE') {
+        const activeOrgId = session?.session?.activeOrganizationId;
+        if (!activeOrgId) return addCors(new Response("Requires active organization", { status: 400 }));
+
+        const userId = session?.user?.id;
+        const memberRow = await env.DB.prepare(
+          `SELECT role FROM member WHERE organizationId = ? AND userId = ?`
+        ).bind(activeOrgId, userId).first<{ role: string }>();
+        if (memberRow?.role === 'read') {
+          return addCors(new Response(JSON.stringify({ error: "Read-only access" }), { status: 403 }));
+        }
+
+        const serviceId = url.searchParams.get('id');
+        if (!serviceId) return addCors(new Response("Missing service id", { status: 400 }));
+
+        const sCheck = await env.DB.prepare(`
+          SELECT s.id FROM services s JOIN projects p ON s.project_id = p.id 
+          WHERE s.id = ? AND p.organization_id = ?
+        `).bind(serviceId, activeOrgId).first();
+        if (!sCheck) return addCors(new Response("Service not found", { status: 404 }));
+
+        await env.DB.prepare(`DELETE FROM log_indexes WHERE service_id = ?`).bind(serviceId).run();
+        await env.DB.prepare(`DELETE FROM services WHERE id = ?`).bind(serviceId).run();
+
+        return addCors(new Response(JSON.stringify({ success: true, id: serviceId }), { headers: { 'Content-Type': 'application/json' } }));
       }
     }
     
@@ -377,13 +427,24 @@ export default {
     
     // WebSockets connection from UI
     if (url.pathname === '/ws') {
-      // NOTE: We could verify auth session here via URL tokens if we wanted to secure the websocket
-      const projId = url.searchParams.get('project_id');
-      const servId = url.searchParams.get('service_id');
+      const rawProj = url.searchParams.get('project_id');
+      const rawServ = url.searchParams.get('service_id');
       
-      if (!projId || !servId) {
+      if (!rawProj || !rawServ) {
         return new Response("Missing project or service", { status: 400 });
       }
+
+      // Resolve canonical project ID
+      const project = await env.DB.prepare(
+        `SELECT id FROM projects WHERE id = ? OR LOWER(name) = LOWER(?) LIMIT 1`
+      ).bind(rawProj, rawProj).first<{ id: string }>();
+      const projId = project?.id || rawProj;
+
+      // Resolve canonical service ID
+      const service = await env.DB.prepare(
+        `SELECT id FROM services WHERE project_id = ? AND (id = ? OR LOWER(name) = LOWER(?)) LIMIT 1`
+      ).bind(projId, rawServ, rawServ).first<{ id: string }>();
+      const servId = service?.id || rawServ;
       
       const doId = env.REALTIME.idFromName(`${projId}:${servId}`);
       const stub = env.REALTIME.get(doId);

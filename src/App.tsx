@@ -140,6 +140,31 @@ export default function App() {
     setActiveServiceId(newService.id);
   };
 
+  const handleProjectDeleted = async (deletedId: string) => {
+    const updated = await loadProjects();
+    await loadServices();
+    if (activeProjectId === deletedId) {
+      if (updated.length > 0) {
+        setActiveProjectId(updated[0].id);
+      } else {
+        setActiveProjectId(null);
+        setActiveServiceId(null);
+      }
+    }
+  };
+
+  const handleServiceDeleted = async (deletedId: string) => {
+    const updated = await loadServices();
+    if (activeServiceId === deletedId) {
+      const remaining = updated.filter((s: any) => s.project_id === activeProjectId);
+      if (remaining.length > 0) {
+        setActiveServiceId(remaining[0].id);
+      } else {
+        setActiveServiceId(null);
+      }
+    }
+  };
+
   const handleSendTestLog = async (projName: string, serviceName = "api") => {
     setSendingTest(true);
     try {
@@ -221,6 +246,8 @@ export default function App() {
         }}
         onProjectCreated={handleProjectCreated}
         onServiceCreated={handleServiceCreated}
+        onProjectDeleted={handleProjectDeleted}
+        onServiceDeleted={handleServiceDeleted}
         onSwitchWorkspace={() => setActiveOrgId(null)}
       />
       

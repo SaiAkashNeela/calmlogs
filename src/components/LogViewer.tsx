@@ -37,11 +37,17 @@ export default function LogViewer({ projectId, serviceId }: LogViewerProps) {
   const [selectedLog, setSelectedLog] = useState<LogEvent | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeLevels, setActiveLevels] = useState<Set<LogLevel>>(new Set(['debug', 'info', 'warn', 'error']));
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<any>(null);
   const streamContainerRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const isPausedRef = useRef(isPaused);
+
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
 
   // Keyboard shortcut listener (/ to search, Esc to close drawer/clear search)
   useEffect(() => {
@@ -92,7 +98,7 @@ export default function LogViewer({ projectId, serviceId }: LogViewerProps) {
       ws.onmessage = (event) => {
         try {
           const log: LogEvent = JSON.parse(event.data);
-          if (!isPaused) {
+          if (!isPausedRef.current) {
             setLogs(prev => [log, ...prev].slice(0, 1500));
           }
         } catch (e) {}
@@ -112,7 +118,7 @@ export default function LogViewer({ projectId, serviceId }: LogViewerProps) {
     } catch (err) {
       setConnectionState('DISCONNECTED');
     }
-  }, [projectId, serviceId, isPaused]);
+  }, [projectId, serviceId]);
 
   useEffect(() => {
     setLogs([]);
@@ -264,14 +270,35 @@ export default function LogViewer({ projectId, serviceId }: LogViewerProps) {
               {isPaused ? <Play className="w-3.5 h-3.5 text-amber-700" /> : <Pause className="w-3.5 h-3.5" />}
             </button>
 
-            {/* Clear logs */}
-            <button
-              onClick={handleClear}
-              title="Clear current log buffer"
-              className="p-1.5 rounded-md bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50 transition-colors"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
+            {/* Clear logs with confirmation */}
+            {showClearConfirm ? (
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-rose-50 border border-rose-200 rounded-md text-[11px] font-mono animate-in fade-in duration-100">
+                <span className="text-rose-700 font-medium">Clear {logs.length} logs?</span>
+                <button
+                  onClick={handleClear}
+                  className="px-1.5 py-0.5 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-medium transition-colors"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={() => setShowClearConfirm(false)}
+                  className="px-1.5 py-0.5 text-zinc-600 hover:text-zinc-900 rounded text-[10px] transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  if (logs.length > 0) setShowClearConfirm(true);
+                }}
+                disabled={logs.length === 0}
+                title="Clear current log buffer"
+                className="p-1.5 rounded-md bg-white border border-zinc-200 text-zinc-600 hover:text-rose-600 hover:bg-rose-50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
 
             {/* Export JSONL */}
             <button

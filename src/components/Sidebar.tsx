@@ -21,6 +21,7 @@ import CreateServiceModal from './CreateServiceModal';
 import FeedbackModal from './FeedbackModal';
 import DeleteAccountModal from './DeleteAccountModal';
 import MembersModal from './MembersModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 import { authClient } from '../lib/auth-client';
 import { useCachedAvatar } from '../lib/avatar-cache';
 
@@ -40,6 +41,8 @@ interface SidebarProps {
   onSelectService: (projectId: string, serviceId: string) => void;
   onProjectCreated: (project: any) => void;
   onServiceCreated: (service: any) => void;
+  onProjectDeleted?: (projectId: string) => void;
+  onServiceDeleted?: (serviceId: string) => void;
   onSwitchWorkspace: () => void;
 }
 
@@ -55,6 +58,8 @@ export default function Sidebar({
   onSelectService,
   onProjectCreated,
   onServiceCreated,
+  onProjectDeleted,
+  onServiceDeleted,
   onSwitchWorkspace
 }: SidebarProps) {
   const [showCreateProject, setShowCreateProject] = useState(false);
@@ -63,6 +68,7 @@ export default function Sidebar({
   const [showFeedback, setShowFeedback] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [showMembersModal, setShowMembersModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'project' | 'service'; id: string; name: string } | null>(null);
   
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -161,13 +167,22 @@ export default function Sidebar({
                         </h3>
                       </div>
                       {isWrite && (
-                        <button
-                          onClick={() => setServiceModalTarget(project)}
-                          title={`Add service to ${project.name}`}
-                          className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 transition-all"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => setServiceModalTarget(project)}
+                            title={`Add service to ${project.name}`}
+                            className="p-0.5 rounded text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 transition-all"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget({ type: 'project', id: project.id, name: project.name })}
+                            title={`Delete project ${project.name}`}
+                            className="p-0.5 rounded text-zinc-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       )}
                     </div>
 
@@ -175,11 +190,11 @@ export default function Sidebar({
                       {projectServices.map(service => {
                         const isActive = activeProjectId === project.id && activeServiceId === service.id;
                         return (
-                          <li key={service.id}>
+                          <li key={service.id} className="group/svc flex items-center">
                             <button
                               onClick={() => onSelectService(project.id, service.id)}
                               className={cn(
-                                "w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs transition-all text-left font-mono",
+                                "flex-1 flex items-center gap-2 px-2 py-1.5 rounded text-xs transition-all text-left font-mono min-w-0",
                                 isActive 
                                   ? "bg-white text-zinc-950 font-semibold border border-zinc-200 shadow-2xs" 
                                   : "text-zinc-600 hover:text-zinc-950 hover:bg-zinc-200/40"
@@ -192,6 +207,18 @@ export default function Sidebar({
                               <span className="truncate flex-1">{service.name}</span>
                               {isActive && <ChevronRight className="w-3 h-3 text-zinc-400 shrink-0" />}
                             </button>
+                            {isWrite && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeleteTarget({ type: 'service', id: service.id, name: service.name });
+                                }}
+                                title={`Delete service ${service.name}`}
+                                className="opacity-0 group-hover/svc:opacity-100 p-1 rounded text-zinc-400 hover:text-rose-600 hover:bg-rose-50 transition-all ml-1 shrink-0"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            )}
                           </li>
                         );
                       })}
@@ -361,6 +388,28 @@ export default function Sidebar({
         isOpen={showDeleteAccount}
         userEmail={currentUser?.email}
         onClose={() => setShowDeleteAccount(false)}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={!!deleteTarget}
+        title={deleteTarget?.type === 'project' ? 'Delete Project' : 'Delete Service'}
+        itemName={deleteTarget?.name || ''}
+        description={
+          deleteTarget?.type === 'project'
+            ? 'All services and log streams in this project will be deleted.'
+            : 'All log indexes for this service will be deleted.'
+        }
+        onConfirm={async () => {
+          if (!deleteTarget) return;
+          if (deleteTarget.type === 'project') {
+            await fetch(`/api/projects?id=${deleteTarget.id}`, { method: 'DELETE' });
+            onProjectDeleted?.(deleteTarget.id);
+          } else {
+            await fetch(`/api/services?id=${deleteTarget.id}`, { method: 'DELETE' });
+            onServiceDeleted?.(deleteTarget.id);
+          }
+        }}
+        onClose={() => setDeleteTarget(null)}
       />
     </>
   );
