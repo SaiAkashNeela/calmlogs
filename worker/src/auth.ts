@@ -6,6 +6,7 @@ import * as schema from "./db/schema";
 
 export function createAuth(env: any) {
   return betterAuth({
+    secret: env.BETTER_AUTH_SECRET || "calmlogs-secret-key-32-chars-minimum-dev",
     baseURL: env.BETTER_AUTH_URL || "http://localhost:3000",
     database: drizzleAdapter(drizzle(env.DB, { schema }), { provider: "sqlite" }),
     socialProviders: {

@@ -202,6 +202,23 @@ export default {
         const { results } = await env.DB.prepare(query).bind(...bind).all();
         return addCors(new Response(JSON.stringify(results), { headers: { 'Content-Type': 'application/json' } }));
       }
+      if (request.method === 'POST') {
+        const activeOrgId = session?.session?.activeOrganizationId;
+        if (!activeOrgId) return addCors(new Response("Requires active organization", { status: 400 }));
+
+        const body: any = await request.json();
+        const { projectId, name, type } = body;
+        if (!projectId || !name) return addCors(new Response("Missing projectId or name", { status: 400 }));
+
+        const pCheck = await env.DB.prepare(`SELECT id FROM projects WHERE id = ? AND organization_id = ?`).bind(projectId, activeOrgId).first();
+        if (!pCheck) return addCors(new Response("Project not found or unauthorized", { status: 404 }));
+
+        const servId = `serv_${Date.now()}`;
+        const now = new Date().toISOString();
+        await env.DB.prepare(`INSERT INTO services (id, project_id, name, type, created_at, updated_at, last_seen_at) VALUES (?, ?, ?, ?, ?, ?, ?)`)
+          .bind(servId, projectId, name, type || 'api', now, now, now).run();
+        return addCors(new Response(JSON.stringify({ id: servId, project_id: projectId, name }), { headers: { 'Content-Type': 'application/json' } }));
+      }
     }
     
     if (url.pathname.startsWith('/api/historical')) {
