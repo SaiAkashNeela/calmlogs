@@ -1,6 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { X, Users, UserPlus, Mail, Shield, Check, Copy, Trash2, Loader2, AlertCircle } from 'lucide-react';
 import { authClient } from '../lib/auth-client';
+import { useCachedAvatar } from '../lib/avatar-cache';
+
+function CachedMemberAvatar({ user }: { user: any }) {
+  const cachedSrc = useCachedAvatar(user?.image);
+  if (cachedSrc) {
+    return (
+      <img
+        src={cachedSrc}
+        alt=""
+        referrerPolicy="no-referrer"
+        className="w-7 h-7 rounded-full object-cover border border-zinc-200 shrink-0"
+      />
+    );
+  }
+  return (
+    <div className="w-7 h-7 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center font-bold text-zinc-700 text-[11px] shrink-0">
+      {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+    </div>
+  );
+}
 
 interface MembersModalProps {
   isOpen: boolean;
@@ -230,13 +250,7 @@ export default function MembersModal({
                   return (
                     <div key={m.id} className="p-3 flex items-center justify-between hover:bg-zinc-50/50 transition-colors">
                       <div className="flex items-center gap-3">
-                        {m.user?.image ? (
-                          <img src={m.user.image} alt="" className="w-7 h-7 rounded-full border border-zinc-200" />
-                        ) : (
-                          <div className="w-7 h-7 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center font-bold text-zinc-700 text-[11px]">
-                            {m.user?.name?.charAt(0) || m.user?.email?.charAt(0) || 'U'}
-                          </div>
-                        )}
+                        <CachedMemberAvatar user={m.user} />
                         <div>
                           <div className="flex items-center gap-1.5">
                             <span className="font-semibold text-zinc-900 font-sans">{m.user?.name || 'User'}</span>

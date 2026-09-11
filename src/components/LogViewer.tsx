@@ -181,7 +181,7 @@ export default function LogViewer({ projectId, serviceId }: LogViewerProps) {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs font-semibold text-zinc-900 uppercase tracking-wider">
-                Telemetry Stream
+                Live Stream
               </span>
               <ConnectionStatusBadge state={connectionState} isPaused={isPaused} />
             </div>
@@ -307,7 +307,7 @@ export default function LogViewer({ projectId, serviceId }: LogViewerProps) {
                 <div className="absolute inset-0 rounded-full border border-emerald-500/20 animate-ping" />
               </div>
               <p className="text-sm font-medium text-zinc-700 mb-1">
-                {connectionState === 'LIVE' ? 'Waiting for telemetry events...' : 'Connecting to log stream...'}
+                {connectionState === 'LIVE' ? 'Waiting for logs...' : 'Connecting to stream...'}
               </p>
               <p className="text-xs text-zinc-500 max-w-sm">
                 Send logs to <code className="text-zinc-800 bg-zinc-100 px-1 py-0.5 rounded border border-zinc-200">/v1/logs</code> and they will stream live in real time.

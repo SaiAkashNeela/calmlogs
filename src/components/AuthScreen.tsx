@@ -32,10 +32,10 @@ export default function AuthScreen({ onLogin }: { onLogin: () => void }) {
         <div className="flex flex-col items-center text-center">
           <img src="/logo.png" alt="CalmLogs" className="w-14 h-14 object-contain rounded-2xl mb-4 shadow-sm" />
           <h1 className="text-2xl font-bold font-sans tracking-tight text-zinc-900">
-            CalmLogs Console
+            CalmLogs
           </h1>
           <p className="mt-1.5 text-xs text-zinc-500 font-mono">
-            High-density telemetry & distributed log streaming
+            Real-time log streaming for modern applications
           </p>
         </div>
 

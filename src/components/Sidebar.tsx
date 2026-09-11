@@ -22,6 +22,7 @@ import FeedbackModal from './FeedbackModal';
 import DeleteAccountModal from './DeleteAccountModal';
 import MembersModal from './MembersModal';
 import { authClient } from '../lib/auth-client';
+import { useCachedAvatar } from '../lib/avatar-cache';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -85,6 +86,7 @@ export default function Sidebar({
 
   const userInitial = currentUser?.name?.charAt(0) || currentUser?.email?.charAt(0) || 'U';
   const isWrite = currentUserRole === 'write';
+  const cachedAvatarUrl = useCachedAvatar(currentUser?.image);
 
   return (
     <>
@@ -121,17 +123,6 @@ export default function Sidebar({
             >
               <Users className="w-3.5 h-3.5" />
             </button>
-
-            {isWrite && (
-              <button
-                onClick={() => setShowCreateProject(true)}
-                title="Create Project"
-                className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-zinc-700 hover:text-zinc-950 bg-zinc-100 hover:bg-zinc-200/70 rounded-md transition-colors border border-zinc-200 font-sans"
-              >
-                <Plus className="w-3 h-3" />
-                <span>New</span>
-              </button>
-            )}
           </div>
         </div>
         
@@ -141,7 +132,7 @@ export default function Sidebar({
             <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">
               Projects ({projects.length})
             </span>
-            {isWrite && (
+            {isWrite && projects.length > 0 && (
               <button
                 onClick={() => setShowCreateProject(true)}
                 title="Add Project"
@@ -153,23 +144,8 @@ export default function Sidebar({
           </div>
 
           {projects.length === 0 ? (
-            <div className="px-3 py-8 text-center flex flex-col items-center bg-white rounded-xl border border-zinc-200/80 m-1 shadow-2xs">
-              <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-400 mb-2">
-                <FolderPlus className="w-4 h-4" />
-              </div>
-              <p className="text-xs font-medium text-zinc-800 font-sans">No projects</p>
-              <p className="text-[10px] text-zinc-500 mt-0.5 mb-3 font-mono">
-                {isWrite ? "Create a project to add services." : "No projects in this workspace yet."}
-              </p>
-              {isWrite && (
-                <button
-                  onClick={() => setShowCreateProject(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 text-white text-xs font-sans font-medium hover:bg-zinc-800 transition-colors shadow-xs"
-                >
-                  <Plus className="w-3 h-3" />
-                  Create Project
-                </button>
-              )}
+            <div className="px-3 py-6 text-center text-zinc-400 text-[11px] font-mono">
+              No projects yet
             </div>
           ) : (
             <div className="space-y-4">
@@ -252,10 +228,11 @@ export default function Sidebar({
               className="flex-1 flex items-center gap-2 p-1.5 rounded-lg hover:bg-zinc-100 transition-colors text-left min-w-0"
               title="Account & Settings"
             >
-              {currentUser?.image ? (
+              {cachedAvatarUrl ? (
                 <img
-                  src={currentUser.image}
+                  src={cachedAvatarUrl}
                   alt={currentUser.name || 'User'}
+                  referrerPolicy="no-referrer"
                   className="w-7 h-7 rounded-full object-cover border border-zinc-200 shrink-0"
                 />
               ) : (
@@ -271,16 +248,7 @@ export default function Sidebar({
                   {currentUser?.email || 'Logged in'}
                 </span>
               </div>
-              <ChevronUp className="w-3 h-3 text-zinc-400 ml-auto shrink-0" />
-            </button>
-
-            {/* Quick Logout Button */}
-            <button
-              onClick={handleSignOut}
-              title="Log Out"
-              className="p-2 rounded-lg text-zinc-500 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0"
-            >
-              <LogOut className="w-4 h-4" />
+              <ChevronUp className="w-3.5 h-3.5 text-zinc-400 ml-auto shrink-0" />
             </button>
           </div>
 

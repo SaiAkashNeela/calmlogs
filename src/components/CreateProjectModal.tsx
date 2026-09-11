@@ -54,8 +54,8 @@ export default function CreateProjectModal({ isOpen, onClose, onCreated }: Creat
               <FolderPlus className="w-4 h-4 text-emerald-400" />
             </div>
             <div>
-              <h3 className="font-semibold text-zinc-900 text-sm font-sans">Create Telemetry Project</h3>
-              <p className="text-[10px] text-zinc-500 font-mono">Groups services, workers, and log indexes</p>
+              <h3 className="font-semibold text-zinc-900 text-sm font-sans">Create Project</h3>
+              <p className="text-[10px] text-zinc-500 font-mono">Groups your services and logs</p>
             </div>
           </div>
           <button

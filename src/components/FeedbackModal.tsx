@@ -49,8 +49,8 @@ export default function FeedbackModal({ isOpen, userEmail, onClose }: FeedbackMo
         {submitted ? (
           <div className="p-8 flex flex-col items-center text-center space-y-2">
             <CheckCircle2 className="w-10 h-10 text-emerald-600 animate-in zoom-in-90 duration-200" />
-            <h4 className="font-sans font-semibold text-zinc-900">Thank you for your feedback!</h4>
-            <p className="text-xs text-zinc-500 font-mono">Our engineering team reviews telemetry and user feedback daily.</p>
+            <h4 className="font-sans font-semibold text-zinc-900">Feedback received</h4>
+            <p className="text-xs text-zinc-500 font-mono">Thank you! Your feedback helps improve CalmLogs.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-4 font-mono">

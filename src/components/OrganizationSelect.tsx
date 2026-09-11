@@ -10,12 +10,14 @@ function cn(...inputs: ClassValue[]) {
 
 export default function OrganizationSelect({ onComplete }: { onComplete: () => void }) {
   const [organizations, setOrganizations] = useState<any[]>([]);
+  const [userInvitations, setUserInvitations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeOrgId, setActiveOrgId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [newOrgName, setNewOrgName] = useState('');
   const [newOrgSlug, setNewOrgSlug] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOrgs();
@@ -30,8 +32,31 @@ export default function OrganizationSelect({ onComplete }: { onComplete: () => v
       if (active.data?.id) {
         setActiveOrgId(active.data.id);
       }
+
+      // Check for invitations addressed to current user
+      const invites = await authClient.organization.listUserInvitations({ query: {} } as any);
+      setUserInvitations(invites?.data || []);
     } catch (e) {}
     setLoading(false);
+  };
+
+  const handleAcceptInvite = async (invitationId: string) => {
+    setActionLoading(invitationId);
+    try {
+      await authClient.organization.acceptInvitation({ invitationId });
+      await fetchOrgs();
+      onComplete();
+    } catch (e) {}
+    setActionLoading(null);
+  };
+
+  const handleRejectInvite = async (invitationId: string) => {
+    setActionLoading(invitationId);
+    try {
+      await authClient.organization.rejectInvitation({ invitationId });
+      await fetchOrgs();
+    } catch (e) {}
+    setActionLoading(null);
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -79,9 +104,48 @@ export default function OrganizationSelect({ onComplete }: { onComplete: () => v
             {showCreate || organizations.length === 0 ? 'Create Workspace' : 'Select Workspace'}
           </h2>
           <p className="mt-1 text-xs text-zinc-500 font-mono">
-            {showCreate || organizations.length === 0 ? 'Set up an organization for your telemetry projects' : 'Choose an organization workspace to proceed'}
+            {showCreate || organizations.length === 0 ? 'Create a workspace to organize your projects and services' : 'Choose a workspace to continue'}
           </p>
         </div>
+
+        {/* Pending user invitations */}
+        {userInvitations.length > 0 && (
+          <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl space-y-2 text-left">
+            <span className="text-[11px] font-semibold text-zinc-600 uppercase tracking-wider font-mono">
+              Invitations for you ({userInvitations.length})
+            </span>
+            <div className="space-y-2">
+              {userInvitations.map(inv => (
+                <div key={inv.id} className="p-2.5 bg-white border border-zinc-200 rounded-lg flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-xs text-zinc-900 font-sans">
+                      {inv.organization?.name || inv.organizationName || 'Workspace'}
+                    </p>
+                    <p className="text-[10px] text-zinc-500 font-mono">
+                      Role: <strong className="uppercase text-zinc-700">{inv.role || 'read'}</strong>
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 font-mono text-xs">
+                    <button
+                      onClick={() => handleAcceptInvite(inv.id)}
+                      disabled={actionLoading === inv.id}
+                      className="px-2.5 py-1 bg-zinc-900 text-white rounded text-[11px] font-medium hover:bg-zinc-800 transition-colors"
+                    >
+                      {actionLoading === inv.id ? 'Joining...' : 'Accept'}
+                    </button>
+                    <button
+                      onClick={() => handleRejectInvite(inv.id)}
+                      disabled={actionLoading === inv.id}
+                      className="px-2 py-1 text-zinc-500 hover:text-zinc-800 rounded text-[11px] hover:bg-zinc-100 transition-colors"
+                    >
+                      Decline
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         
         {(!showCreate && organizations.length > 0) ? (
           <div className="mt-6 space-y-2.5">
