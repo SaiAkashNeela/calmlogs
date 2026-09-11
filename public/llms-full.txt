@@ -1,0 +1,72 @@
+# CalmLogs — Complete Technical Reference for AI & LLMs
+
+> CalmLogs is an open-source, edge-native distributed logging system built on Cloudflare Workers, Durable Objects, D1 SQLite, and Cloudflare R2 object storage.
+
+## Core Architectural Components
+
+### 1. Ingestion Gateway (`Cloudflare Worker`)
+- Ingests single log events or JSON batch arrays via `POST /v1/logs`.
+- Validates payload limits: maximum 5MB body size, 1,000 logs per batch array.
+- Clamps individual message lengths to 64 KB (65,536 characters) to prevent memory exhaustion.
+- Sanitizes project and service identifiers with `/[^a-zA-Z0-9_\-\.]/g` to neutralize path traversal or delimiter injection.
+- Hashes API keys with SHA-256 (`crypto.subtle.digest('SHA-256')`) and compares against `services.ingestion_key_hash`.
+- Project-level authorization: an API key issued for a project authorizes all auto-created services within that project.
+
+### 2. Real-Time Pub/Sub Broker (`Durable Object: LogRingBuffer`)
+- Manages an in-memory ring buffer (up to 1,000 logs or 1MB) per active service instance.
+- Broadcasts incoming logs immediately to connected clients over WebSockets.
+- Schedules storage alarms (`this.ctx.storage.setAlarm`) to batch-flush logs every 10 seconds or when the buffer fills.
+
+### 3. Cold Storage Archival (`Cloudflare R2`)
+- Flushes compressed JSONL segments to R2: `logs/${projectId}/${serviceId}/${year}/${month}/${day}/segment-${timestamp}.jsonl`.
+- Zero egress bandwidth fees ($0.00/GB).
+- Free tier includes 10 GB storage and 1M write operations/month.
+
+### 4. Relational Index & Team Management (`Cloudflare D1 SQLite`)
+- Tracks users, sessions, organizations, projects, services, and segment indices.
+- 100% parameterized SQL queries via `env.DB.prepare(...).bind(...)`.
+- Free tier includes 5 GB database storage, 5,000,000 row reads/day, and 100,000 row writes/day.
+
+## CLI Operation (`calmlogs`)
+The CLI acts as a transparent non-blocking bridge:
+```bash
+# Standard Unix pipe
+npm start | npx calmlogs --project "my-app" --service "api"
+
+# Process Runner
+npx calmlogs run --project "my-app" --service "api" -- npm start
+```
+When flags are omitted:
+- Service is auto-detected from `package.json` (`name`).
+- Project is auto-detected from current working directory name.
+- Fallback defaults: project `default`, service `app`.
+
+## Docker Compose Network Auto-Mapping
+Docker Compose lines follow the pattern:
+```text
+api-1      | [INFO] Server started on port 3000
+postgres-1 | [LOG] database system is ready
+redis_1    | [NOTICE] Ready to accept connections
+```
+CalmLogs regex parses the container instance prefix, strips `-1` / `_1`, routes logs dynamically into separate service streams, and cleans the log message in the dashboard.
+
+## Cloudflare Free Tier Summary
+| Cloudflare Service | Included Free Allowance | CalmLogs Real-World Capacity |
+| :--- | :--- | :--- |
+| **R2 Storage** | 10 GB / month, 1M writes, 10M reads | ~100,000,000 compressed logs |
+| **Workers Edge** | 100,000 requests / day (3M/mo) | ~5,000,000 logs / day (batched) |
+| **D1 (SQLite)** | 5 GB storage, 5M reads / 100k writes per day | Millions of segment & index rows |
+| **Bandwidth** | Unlimited $0.00 egress | Zero cloud transfer bills |
+
+## Security & RBAC
+- **Key Hashing:** Plaintext keys are never stored; only SHA-256 digests exist in SQLite.
+- **RBAC:** Roles `admin`, `write`, and `read`. Read-only accounts cannot create or delete projects or services.
+- **Direct Invitations:** Teams invite members via direct shareable link `/?invitation_id=...` without needing SMTP or email server configurations.
+- **Audited:** 100/100 Defensive Security Audit rating against OWASP Top 10 guidelines.
+
+## Official Links
+- **Website:** https://calmlogs.com
+- **Documentation:** https://docs.calmlogs.com
+- **GitHub:** https://github.com/SaiAkashNeela/calmlogs
+- **Author:** Sai Akash Neela (https://saiakashneela.com / https://saiakash.dev)
+- **Design Partner:** https://geeksdesigns.com

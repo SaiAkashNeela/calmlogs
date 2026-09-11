@@ -537,6 +537,105 @@
       color: #065f46;
     }
 
+    /* Cloudflare Free Tier Section */
+    .cf-free-section {
+      padding: 70px 0;
+      background: #ffffff;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cf-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .cf-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+    }
+
+    .cf-card:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .cf-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .cf-pill {
+      display: inline-block;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .cf-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .cf-price {
+      font-size: 12px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: #10b981;
+      background: var(--accent-subtle);
+      border: 1px solid var(--accent-border);
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .cf-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 16px;
+      flex: 1;
+    }
+
+    .cf-bar-wrapper {
+      height: 6px;
+      background: #e4e4e7;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .cf-bar {
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    .cf-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .cf-stats strong {
+      color: var(--text-main);
+    }
+
     /* FAQ Section */
     .faq-section {
       padding: 60px 0 80px;
@@ -660,18 +759,16 @@
         <nav class="nav-links">
           <a href="#features">Features</a>
           <a href="#compose">Docker Compose</a>
+          <a href="#free-tier">Cloudflare Free Tier</a>
           <a href="#architecture">Architecture</a>
-          <a href="/docs/">Documentation</a>
+          <a href="https://docs.calmlogs.com" target="_blank" rel="noopener">Docs</a>
           <a href="https://github.com/SaiAkashNeela/calmlogs" target="_blank" rel="noopener">GitHub</a>
         </nav>
 
         <div class="nav-actions">
-          <a href="/docs/" class="btn btn-ghost">Docs</a>
-          <a href="https://github.com/SaiAkashNeela/calmlogs" target="_blank" rel="noopener" class="btn btn-dark">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-            </svg>
-            Star on GitHub
+          <a href="https://docs.calmlogs.com" class="btn btn-ghost">Docs</a>
+          <a href="/" class="btn btn-dark" style="background: #10b981; color: #ffffff; border-color: #059669;">
+            Try CalmLogs Free
           </a>
         </div>
       </div>
@@ -682,7 +779,7 @@
   <section class="hero">
     <div class="container">
       <div class="badge">
-        <span>●</span> Open Source & Edge-Native
+        <span>●</span> Open Source & Edge-Native &bull; $0 Cloudflare Free Tier
       </div>
       <h1>Log everything without changing your code.</h1>
       <p class="hero-sub">
@@ -690,6 +787,9 @@
       </p>
 
       <div class="hero-cta-group">
+        <a href="/" class="btn btn-dark" style="padding: 12px 24px; font-size: 14px; background: #18181b;">
+          Launch CalmLogs App →
+        </a>
         <div class="command-bar">
           <span class="cmd-prefix">$</span>
           <span id="hero-cmd">npm start | npx calmlogs</span>
@@ -698,7 +798,7 @@
             <span>Copy</span>
           </button>
         </div>
-        <a href="/docs/" class="btn btn-ghost" style="padding: 12px 20px;">Read Documentation →</a>
+        <a href="https://docs.calmlogs.com" class="btn btn-ghost" style="padding: 12px 20px; font-size: 14px;">Documentation</a>
       </div>
 
       <!-- Live Terminal Showcase -->
@@ -842,6 +942,109 @@
         </div>
       </div>
     </div>
+  <!-- Cloudflare Free Tier Section -->
+  <section class="cf-free-section" id="free-tier">
+    <div class="container">
+      <div class="section-head">
+        <div class="badge" style="background: #eff6ff; border-color: #bfdbfe; color: #1e40af;">Official Cloudflare Free Limits</div>
+        <h2>Run 100% Free on Cloudflare</h2>
+        <p>CalmLogs is engineered specifically around Cloudflare's permanent free allowance. Stream and store millions of logs for $0.00/month.</p>
+      </div>
+
+      <div class="cf-grid">
+        <!-- Card 1: R2 Storage -->
+        <div class="cf-card">
+          <div>
+            <div class="cf-card-header">
+              <div class="cf-title">
+                <span class="cf-pill">Cloudflare R2</span>
+                <h3>10 GB Cold Storage</h3>
+              </div>
+              <span class="cf-price">$0 / mo</span>
+            </div>
+            <p class="cf-desc">Compressed JSONL segments stored indefinitely. Zero egress fees, zero bandwidth charges.</p>
+          </div>
+          <div>
+            <div class="cf-bar-wrapper">
+              <div class="cf-bar" style="width: 100%; background: #10b981;"></div>
+            </div>
+            <div class="cf-stats">
+              <span>Included: <strong>10 GB / month</strong></span>
+              <span>Capacity: <strong>~100M logs</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Workers Edge -->
+        <div class="cf-card">
+          <div>
+            <div class="cf-card-header">
+              <div class="cf-title">
+                <span class="cf-pill">Cloudflare Workers</span>
+                <h3>100k Requests / Day</h3>
+              </div>
+              <span class="cf-price">$0 / mo</span>
+            </div>
+            <p class="cf-desc">Ingestion API and WebSocket pub/sub live fan-out across 200+ global edge locations.</p>
+          </div>
+          <div>
+            <div class="cf-bar-wrapper">
+              <div class="cf-bar" style="width: 100%; background: #3b82f6;"></div>
+            </div>
+            <div class="cf-stats">
+              <span>Included: <strong>3,000,000 reqs/mo</strong></span>
+              <span>Capacity: <strong>~5M logs/day</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: D1 SQLite -->
+        <div class="cf-card">
+          <div>
+            <div class="cf-card-header">
+              <div class="cf-title">
+                <span class="cf-pill">Cloudflare D1 (SQLite)</span>
+                <h3>5 GB Database</h3>
+              </div>
+              <span class="cf-price">$0 / mo</span>
+            </div>
+            <p class="cf-desc">Edge relational SQLite for BetterAuth sessions, team RBAC, catalogs, and segment indices.</p>
+          </div>
+          <div>
+            <div class="cf-bar-wrapper">
+              <div class="cf-bar" style="width: 100%; background: #8b5cf6;"></div>
+            </div>
+            <div class="cf-stats">
+              <span>Reads: <strong>5,000,000 / day</strong></span>
+              <span>Writes: <strong>100,000 / day</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Bandwidth -->
+        <div class="cf-card">
+          <div>
+            <div class="cf-card-header">
+              <div class="cf-title">
+                <span class="cf-pill">Network Bandwidth</span>
+                <h3>Zero Egress Fees</h3>
+              </div>
+              <span class="cf-price">$0 forever</span>
+            </div>
+            <p class="cf-desc">Unlike AWS S3 or GCP which penalize you per gigabyte transferred, Cloudflare has $0 egress fees.</p>
+          </div>
+          <div>
+            <div class="cf-bar-wrapper">
+              <div class="cf-bar" style="width: 100%; background: #f59e0b;"></div>
+            </div>
+            <div class="cf-stats">
+              <span>Download Egress: <strong>$0.00 / GB</strong></span>
+              <span>Global CDN: <strong>Included</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- Comparison Matrix -->
@@ -945,9 +1148,11 @@
         <div class="footer-col">
           <h5>Product</h5>
           <ul>
+            <li><a href="/">Launch CalmLogs App</a></li>
             <li><a href="#features">Features</a></li>
             <li><a href="#compose">Docker Compose</a></li>
-            <li><a href="/docs/">Documentation</a></li>
+            <li><a href="#free-tier">Cloudflare Free Tier</a></li>
+            <li><a href="https://docs.calmlogs.com">Documentation</a></li>
             <li><a href="https://github.com/SaiAkashNeela/calmlogs/releases" target="_blank" rel="noopener">Releases</a></li>
           </ul>
         </div>

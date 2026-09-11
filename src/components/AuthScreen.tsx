@@ -10,13 +10,16 @@ export default function AuthScreen({ onLogin }: { onLogin: () => void }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const invitationId = urlParams?.get('invitation_id');
+
   const handleGoogleSignIn = async () => {
     setError('');
     setLoading(true);
     try {
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: window.location.origin
+        callbackURL: window.location.href
       });
     } catch (e: any) {
       setError(e.message || "Google authentication failed. Check credentials.");
@@ -38,6 +41,17 @@ export default function AuthScreen({ onLogin }: { onLogin: () => void }) {
             Real-time log streaming for modern applications
           </p>
         </div>
+
+        {invitationId && (
+          <div className="p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-mono space-y-1">
+            <div className="flex items-center gap-1.5 font-semibold text-emerald-900 font-sans">
+              <span>Workspace Invitation</span>
+            </div>
+            <p className="text-[11px] text-emerald-700 leading-relaxed">
+              You have been invited to collaborate on a workspace. Sign in to review and accept the invite.
+            </p>
+          </div>
+        )}
 
         {error && (
           <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700 font-mono">

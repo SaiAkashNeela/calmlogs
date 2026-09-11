@@ -1,0 +1,81 @@
+# CalmLogs
+
+> CalmLogs is a minimalist, edge-native, open-source distributed logging platform for developers. It enables instant log streaming from any application, container, or Docker Compose network with zero code modifications.
+
+## Overview
+- **Core Value:** Pipes stdout straight into a live dashboard. No proprietary agents, no custom SDK code patches.
+- **CLI Tool:** `npm start | npx calmlogs` automatically infers project from directory name and service from `package.json`.
+- **Docker Compose:** Automatically parses `<service>-<instance> | <log>` prefixes, separating containers (`api`, `postgres`, `redis`) into dedicated service dashboards dynamically.
+- **Edge Native:** Built on Cloudflare Workers, Durable Objects (WebSocket real-time fan-out), Cloudflare R2 (compressed JSONL cold storage), and Cloudflare D1 (SQLite relational indexes).
+- **Free Tier Economics:** Runs 100% free on Cloudflare's free tier (10 GB R2, 100k Worker requests/day, 5 GB D1 database).
+- **License:** MIT Open Source.
+- **Website:** https://calmlogs.com
+- **Documentation:** https://docs.calmlogs.com
+- **Author:** Sai Akash Neela (https://saiakashneela.com / https://saiakash.dev)
+- **Design Partner:** https://geeksdesigns.com
+
+## Quickstart
+
+### 1. Unix Pipe (Zero Configuration)
+```bash
+# Node.js
+npm start | npx calmlogs
+
+# Explicit Project & Service
+node server.js | npx calmlogs --project "my-backend" --service "api"
+
+# Python (unbuffered)
+python -u main.py | npx calmlogs --project "ml-service" --service "worker"
+
+# Go / Rust
+go run . | npx calmlogs --project "infra" --service "gateway"
+```
+
+### 2. Process Runner
+```bash
+npx calmlogs run --project "core" --service "api" -- npm run dev
+```
+
+### 3. Docker Compose Sidecar Service
+Add this service to your `docker-compose.yml`:
+```yaml
+services:
+  calmlogs:
+    image: node:alpine
+    container_name: calmlogs-forwarder
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # networks: [backend_net]  # Optional: limit to specific network
+    command: >
+      sh -c "apk add --no-cache docker-cli docker-cli-compose &&
+      docker compose logs -f --no-color | npx -y calmlogs --project 'prod-stack' --key 'cl_live_...'"
+```
+
+## CLI Reference (`calmlogs`)
+- `--project, -p <name>`: Project identifier. Defaults to current directory or `default`.
+- `--service, -s <name>`: Service identifier. Defaults to `package.json` `name` or `app`.
+- `--key, -k <token>`: Ingestion API secret key (`cl_live_...`).
+- `--endpoint, -e <url>`: CalmLogs host URL (default: `http://localhost:3000`).
+- `--network, -n <net>`: Optional network filter tag.
+
+## Ingestion HTTP API
+- **Endpoint:** `POST /v1/logs`
+- **Headers:** `Content-Type: application/json`, `Authorization: Bearer <cl_live_key>`
+- **Payload:** Single LogEvent or JSON array (maximum 1,000 logs per batch, 5MB body limit).
+```json
+[
+  {
+    "project": "core",
+    "service": "api",
+    "level": "info",
+    "message": "User checkout completed",
+    "metadata": { "orderId": "ord_123", "amount": 49.99 }
+  }
+]
+```
+
+## Full Documentation
+For complete technical manual and extended architecture details, refer to:
+- [Full LLM Manual](https://calmlogs.com/llms-full.txt)
+- [Official Documentation](https://docs.calmlogs.com)

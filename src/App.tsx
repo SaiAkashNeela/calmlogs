@@ -7,7 +7,7 @@ import OrganizationSelect from './components/OrganizationSelect';
 import CreateProjectModal from './components/CreateProjectModal';
 import CreateServiceModal from './components/CreateServiceModal';
 import { authClient } from './lib/auth-client';
-import { Activity, LogOut, Plus, FolderPlus, Terminal, Copy, Check, Send } from 'lucide-react';
+import { Activity, LogOut, Plus, FolderPlus, Terminal, Copy, Check, Send, Users, Loader2 } from 'lucide-react';
 
 /* Hallmark · macrostructure: 05-workbench · genre: modern-minimal · theme: Workbench Light */
 export default function App() {
@@ -29,17 +29,60 @@ export default function App() {
   const [copied, setCopied] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
 
-  // Check and accept any pending invitation from URL
-  const handlePendingInviteUrl = async (userSession: any) => {
+  // Invitation Prompt State
+  const [inviteModalData, setInviteModalData] = useState<{
+    invitationId: string;
+    orgName?: string;
+    role?: string;
+  } | null>(null);
+  const [inviteActionLoading, setInviteActionLoading] = useState(false);
+
+  // Check pending invitation from URL and display review modal
+  const checkPendingInviteUrl = async (userSession: any) => {
     const urlParams = new URLSearchParams(window.location.search);
     const invitationId = urlParams.get('invitation_id');
     if (invitationId && userSession) {
       try {
-        await authClient.organization.acceptInvitation({ invitationId });
-        window.history.replaceState({}, '', window.location.pathname);
+        const invRes = await authClient.organization.getInvitation({ query: { id: invitationId } } as any);
+        const orgName = invRes.data?.organizationName || 'Workspace';
+        const role = invRes.data?.role || 'read';
+        setInviteModalData({ invitationId, orgName, role });
       } catch (e) {
-        console.error('Failed to accept invitation:', e);
+        setInviteModalData({ invitationId, orgName: 'Workspace', role: 'member' });
       }
+    }
+  };
+
+  const handleAcceptInvite = async () => {
+    if (!inviteModalData) return;
+    setInviteActionLoading(true);
+    try {
+      await authClient.organization.acceptInvitation({ invitationId: inviteModalData.invitationId });
+      window.history.replaceState({}, '', window.location.pathname);
+      setInviteModalData(null);
+      await checkSession();
+    } catch (e) {
+      console.error('Failed to accept invitation:', e);
+      window.history.replaceState({}, '', window.location.pathname);
+      setInviteModalData(null);
+    } finally {
+      setInviteActionLoading(false);
+    }
+  };
+
+  const handleRejectInvite = async () => {
+    if (!inviteModalData) return;
+    setInviteActionLoading(true);
+    try {
+      await authClient.organization.rejectInvitation({ invitationId: inviteModalData.invitationId });
+      window.history.replaceState({}, '', window.location.pathname);
+      setInviteModalData(null);
+    } catch (e) {
+      console.error('Failed to reject invitation:', e);
+      window.history.replaceState({}, '', window.location.pathname);
+      setInviteModalData(null);
+    } finally {
+      setInviteActionLoading(false);
     }
   };
 
@@ -50,7 +93,7 @@ export default function App() {
       setCurrentUser(res.data?.user);
 
       if (res.data?.session) {
-        await handlePendingInviteUrl(res.data.session);
+        await checkPendingInviteUrl(res.data.session);
         if (res.data.session.activeOrganizationId) {
           setActiveOrgId(res.data.session.activeOrganizationId);
         }
@@ -369,6 +412,58 @@ export default function App() {
           onClose={() => setServiceModalTarget(null)}
           onCreated={handleServiceCreated}
         />
+      )}
+
+      {/* Review Invitation Modal */}
+      {inviteModalData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-zinc-900 text-sm font-sans">Workspace Invitation</h3>
+                <p className="text-xs text-zinc-500 font-mono">You've been invited to join an organization</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs space-y-1.5 font-mono">
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Workspace:</span>
+                <span className="font-semibold text-zinc-900 font-sans">{inviteModalData.orgName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Invited Role:</span>
+                <span className="uppercase font-semibold text-emerald-700">{inviteModalData.role}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-zinc-600 font-sans leading-relaxed">
+              Accepting will grant you access to stream, view, and collaborate on this workspace's logs and services.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                disabled={inviteActionLoading}
+                onClick={handleRejectInvite}
+                className="px-4 py-2 text-xs font-semibold text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors"
+              >
+                Decline
+              </button>
+              <button
+                type="button"
+                disabled={inviteActionLoading}
+                onClick={handleAcceptInvite}
+                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold font-sans text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg transition-all shadow-sm disabled:opacity-50"
+              >
+                {inviteActionLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>Accept Invitation</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
