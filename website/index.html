@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <!-- Primary Meta Tags -->
+  <title>CalmLogs — Minimalist, Open-Source Distributed Logging for Developers</title>
+  <meta name="title" content="CalmLogs — Minimalist, Open-Source Distributed Logging for Developers" />
+  <meta name="description" content="Stream logs from any stack or Docker Compose network into an ultra-fast, calm dashboard with 1 command. Zero code modifications, open-source, edge-native architecture." />
+  <meta name="keywords" content="open source logging, developer log viewer, docker compose logs, distributed log management, lightweight logging tool, real time log stream, cloudflare workers logging, calmlogs, developer tools" />
+  <meta name="author" content="Sai Akash Neela" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+  <link rel="canonical" href="https://calmlogs.com/" />
+
+  <!-- Open Graph / Facebook / LinkedIn -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://calmlogs.com/" />
+  <meta property="og:site_name" content="CalmLogs" />
+  <meta property="og:title" content="CalmLogs — Minimalist, Open-Source Distributed Logging" />
+  <meta property="og:description" content="Zero code changes. Pipe stdout straight into a live, beautiful dashboard. Auto-detects services across Docker Compose networks." />
+  <meta property="og:image" content="https://calmlogs.com/og-image.png" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@calmlogs" />
+  <meta name="twitter:creator" content="@saiakashneela" />
+  <meta name="twitter:url" content="https://calmlogs.com/" />
+  <meta name="twitter:title" content="CalmLogs — Minimalist, Open-Source Distributed Logging" />
+  <meta name="twitter:description" content="1 command logging for any stack. Stream stdout to an edge-native dashboard without modifying your codebase." />
+  <meta name="twitter:image" content="https://calmlogs.com/og-image.png" />
+
+  <!-- Favicon & Icons -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2318181b'/%3E%3Cpath d='M8 12h16M8 16h10M8 20h13' stroke='%2334d399' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2318181b'/%3E%3Cpath d='M8 12h16M8 16h10M8 20h13' stroke='%2334d399' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <meta name="theme-color" content="#ffffff" />
+
+  <!-- Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- JSON-LD Structured Data: SoftwareApplication & Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://calmlogs.com/#software",
+        "name": "CalmLogs",
+        "url": "https://calmlogs.com/",
+        "operatingSystem": "All (Linux, macOS, Windows, Docker)",
+        "applicationCategory": "DeveloperApplication",
+        "description": "Minimalist open-source distributed log streaming platform with zero-code CLI pipes and Docker Compose auto-mapping.",
+        "softwareVersion": "1.0.0",
+        "license": "https://opensource.org/licenses/MIT",
+        "author": {
+          "@type": "Person",
+          "name": "Sai Akash Neela",
+          "url": "https://saiakashneela.com",
+          "sameAs": ["https://saiakash.dev"]
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://calmlogs.com/#organization",
+        "name": "CalmLogs Open Source",
+        "url": "https://calmlogs.com/",
+        "logo": "https://calmlogs.com/logo.png",
+        "founder": {
+          "@type": "Person",
+          "name": "Sai Akash Neela",
+          "url": "https://saiakashneela.com"
+        }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://calmlogs.com/#website",
+        "url": "https://calmlogs.com/",
+        "name": "CalmLogs",
+        "publisher": {
+          "@id": "https://calmlogs.com/#organization"
+        }
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    /* Hallmark Tokens · Clean Tactile Theme */
+    :root {
+      --bg: #fafafa;
+      --paper: #ffffff;
+      --paper-subtle: #f4f4f5;
+      --border: #e4e4e7;
+      --border-strong: #d4d4d8;
+      --text-main: #18181b;
+      --text-muted: #71717a;
+      --text-subtle: #a1a1aa;
+      --accent: #10b981;
+      --accent-subtle: #ecfdf5;
+      --accent-border: #a7f3d0;
+      --dark-card: #09090b;
+      --dark-card-border: #27272a;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      overflow-x: clip;
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.5;
+    }
+
+    /* Typography */
+    h1, h2, h3, h4 {
+      font-style: normal;
+      font-weight: 600;
+      color: var(--text-main);
+      letter-spacing: -0.025em;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .font-mono {
+      font-family: var(--font-mono);
+    }
+
+    /* Container */
+    .container {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Header Nav */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(250, 250, 250, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      background: #18181b;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .nav-links a:hover {
+      color: var(--text-main);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    .btn-dark {
+      background: var(--text-main);
+      color: #ffffff;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-dark:hover {
+      background: #27272a;
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      background: var(--paper);
+      color: var(--text-main);
+      border-color: var(--border);
+    }
+
+    .btn-ghost:hover {
+      background: var(--paper-subtle);
+      border-color: var(--border-strong);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: var(--accent-subtle);
+      border: 1px solid var(--accent-border);
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #065f46;
+      font-family: var(--font-mono);
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 56px);
+      line-height: 1.1;
+      max-width: 840px;
+      margin: 0 auto 20px;
+      letter-spacing: -0.035em;
+    }
+
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 19px);
+      color: var(--text-muted);
+      max-width: 640px;
+      margin: 0 auto 36px;
+      line-height: 1.5;
+    }
+
+    .hero-cta-group {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 48px;
+      flex-wrap: wrap;
+    }
+
+    /* Command Bar */
+    .command-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--dark-card);
+      border: 1px solid var(--dark-card-border);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      color: #fafafa;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      box-shadow: var(--shadow-lg);
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    .cmd-prefix {
+      color: #34d399;
+      user-select: none;
+    }
+
+    .copy-btn {
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      color: #e4e4e7;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.15s;
+    }
+
+    .copy-btn:hover {
+      background: #3f3f46;
+      color: #ffffff;
+    }
+
+    /* Live Stream Showcase */
+    .showcase {
+      margin: 20px auto 80px;
+      background: #09090b;
+      border: 1px solid #27272a;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      text-align: left;
+    }
+
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      background: #18181b;
+      border-bottom: 1px solid #27272a;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: #a1a1aa;
+    }
+
+    .terminal-tabs {
+      display: flex;
+      gap: 8px;
+    }
+
+    .t-tab {
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: transparent;
+      color: #a1a1aa;
+      cursor: pointer;
+      border: 1px solid transparent;
+      font-size: 11px;
+    }
+
+    .t-tab.active {
+      background: #27272a;
+      color: #f4f4f5;
+      border-color: #3f3f46;
+    }
+
+    .terminal-body {
+      padding: 20px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.7;
+      overflow-x: auto;
+      max-height: 380px;
+      background: #09090b;
+    }
+
+    .log-line {
+      display: flex;
+      gap: 14px;
+      white-space: nowrap;
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .log-ts { color: #71717a; user-select: none; }
+    .log-svc { font-weight: 600; padding: 0 6px; border-radius: 4px; }
+    .svc-api { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+    .svc-db { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .svc-redis { background: rgba(244, 63, 94, 0.15); color: #fb7185; }
+    .svc-worker { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+    .log-lvl-info { color: #a1a1aa; }
+    .log-lvl-warn { color: #fbbf24; }
+    .log-lvl-err { color: #f87171; }
+    .log-msg { color: #e4e4e7; }
+
+    /* Highlights Grid */
+    .highlights {
+      padding: 60px 0;
+    }
+
+    .section-head {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto 48px;
+    }
+
+    .section-head h2 {
+      font-size: clamp(24px, 3.5vw, 36px);
+      margin-bottom: 12px;
+    }
+
+    .section-head p {
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 28px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      background: var(--paper-subtle);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+      color: var(--text-main);
+    }
+
+    .card h3 {
+      font-size: 17px;
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      color: var(--text-muted);
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+
+    /* Code Snippet Box */
+    .code-box {
+      margin-top: 14px;
+      background: #18181b;
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      color: #e4e4e7;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      overflow-x: auto;
+      border: 1px solid #27272a;
+    }
+
+    /* Comparison Section */
+    .comparison-section {
+      padding: 60px 0;
+    }
+
+    .comp-table-wrapper {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      box-shadow: var(--shadow-sm);
+    }
+
+    table.comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    table.comp-table th, table.comp-table td {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    table.comp-table th {
+      background: var(--paper-subtle);
+      font-weight: 600;
+      color: var(--text-main);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    table.comp-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .highlight-col {
+      background: rgba(16, 185, 129, 0.04);
+      font-weight: 600;
+      color: #065f46;
+    }
+
+    /* FAQ Section */
+    .faq-section {
+      padding: 60px 0 80px;
+    }
+
+    .faq-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 24px;
+    }
+
+    .faq-item {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 24px;
+    }
+
+    .faq-item h4 {
+      font-size: 15px;
+      margin-bottom: 10px;
+    }
+
+    .faq-item p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      background: #ffffff;
+      padding: 60px 0 40px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .footer-brand h4 {
+      font-size: 15px;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .footer-col h5 {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-main);
+      margin-bottom: 14px;
+      font-family: var(--font-mono);
+    }
+
+    .footer-col ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .footer-col a:hover {
+      color: var(--text-main);
+    }
+
+    .footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-subtle);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .credits a {
+      color: var(--text-muted);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .credits a:hover {
+      color: var(--text-main);
+    }
+
+    /* Mobile Adaptations */
+    @media (max-width: 768px) {
+      .hero { padding: 48px 0 36px; }
+      .nav-links { display: none; }
+      .footer-grid { grid-template-columns: 1fr; gap: 28px; }
+      .grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <header>
+    <div class="container">
+      <div class="nav-inner">
+        <a href="/" class="brand" aria-label="CalmLogs Homepage">
+          <div class="brand-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round">
+              <line x1="4" y1="6" x2="20" y2="6"></line>
+              <line x1="4" y1="12" x2="14" y2="12"></line>
+              <line x1="4" y1="18" x2="18" y2="18"></line>
+            </svg>
+          </div>
+          <span>CalmLogs</span>
+        </a>
+
+        <nav class="nav-links">
+          <a href="#features">Features</a>
+          <a href="#compose">Docker Compose</a>
+          <a href="#architecture">Architecture</a>
+          <a href="/docs/">Documentation</a>
+          <a href="https://github.com/SaiAkashNeela/calmlogs" target="_blank" rel="noopener">GitHub</a>
+        </nav>
+
+        <div class="nav-actions">
+          <a href="/docs/" class="btn btn-ghost">Docs</a>
+          <a href="https://github.com/SaiAkashNeela/calmlogs" target="_blank" rel="noopener" class="btn btn-dark">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            Star on GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="badge">
+        <span>●</span> Open Source & Edge-Native
+      </div>
+      <h1>Log everything without changing your code.</h1>
+      <p class="hero-sub">
+        Pipes stdout from any backend, container, or Docker Compose network straight into a live, clean dashboard. 1-command setup, zero SDK bloat.
+      </p>
+
+      <div class="hero-cta-group">
+        <div class="command-bar">
+          <span class="cmd-prefix">$</span>
+          <span id="hero-cmd">npm start | npx calmlogs</span>
+          <button class="copy-btn" onclick="copyCommand('npm start | npx calmlogs', this)" aria-label="Copy command">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span>Copy</span>
+          </button>
+        </div>
+        <a href="/docs/" class="btn btn-ghost" style="padding: 12px 20px;">Read Documentation →</a>
+      </div>
+
+      <!-- Live Terminal Showcase -->
+      <div class="showcase">
+        <div class="terminal-header">
+          <div class="terminal-tabs">
+            <button class="t-tab active" onclick="switchTab('all', this)">All Services (Compose)</button>
+            <button class="t-tab" onclick="switchTab('api', this)">api-gateway</button>
+            <button class="t-tab" onclick="switchTab('postgres', this)">postgres</button>
+            <button class="t-tab" onclick="switchTab('redis', this)">redis</button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #34d399;"></span>
+            <span>Live Stream (WebSocket)</span>
+          </div>
+        </div>
+
+        <div class="terminal-body" id="terminal-content">
+          <div class="log-line" data-svc="api">
+            <span class="log-ts">22:20:01.102</span>
+            <span class="log-svc svc-api">api</span>
+            <span class="log-lvl-info">[INFO]</span>
+            <span class="log-msg">HTTP GET /v1/checkout/session 200 OK — 18ms</span>
+          </div>
+          <div class="log-line" data-svc="postgres">
+            <span class="log-ts">22:20:01.118</span>
+            <span class="log-svc svc-db">postgres</span>
+            <span class="log-lvl-info">[LOG]</span>
+            <span class="log-msg">checkpoint complete: wrote 84 buffers (0.1%); 0 WAL file(s) added</span>
+          </div>
+          <div class="log-line" data-svc="redis">
+            <span class="log-ts">22:20:01.125</span>
+            <span class="log-svc svc-redis">redis</span>
+            <span class="log-lvl-info">[NOTICE]</span>
+            <span class="log-msg">1:M 11 Sep 2026 22:20:01.125 * 10 changes in 300 seconds. Saving DB to disk</span>
+          </div>
+          <div class="log-line" data-svc="worker">
+            <span class="log-ts">22:20:02.044</span>
+            <span class="log-svc svc-worker">worker</span>
+            <span class="log-lvl-info">[INFO]</span>
+            <span class="log-msg">Processing invoice #inv_9921 for user u_8412</span>
+          </div>
+          <div class="log-line" data-svc="api">
+            <span class="log-ts">22:20:02.480</span>
+            <span class="log-svc svc-api">api</span>
+            <span class="log-lvl-warn">[WARN]</span>
+            <span class="log-msg">Rate limit approaching for client ip 198.51.100.24 (88/100 req/min)</span>
+          </div>
+          <div class="log-line" data-svc="postgres">
+            <span class="log-ts">22:20:03.011</span>
+            <span class="log-svc svc-db">postgres</span>
+            <span class="log-lvl-info">[LOG]</span>
+            <span class="log-msg">duration: 2.140 ms  statement: SELECT * FROM users WHERE email = 'dev@company.com'</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid -->
+  <section class="highlights" id="features">
+    <div class="container">
+      <div class="section-head">
+        <h2>Zero code intrusion. Instant visibility.</h2>
+        <p>You shouldn't have to install heavy SDKs or rewrite logging calls in 40 different microservice repos just to see your logs.</p>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+          </div>
+          <h3>1-Command Ingestion CLI</h3>
+          <p>Works with Unix pipes or command execution. Automatically recognizes JSON structured logs, extract log levels, events, and timestamps without config.</p>
+          <div class="code-box">node server.js | npx calmlogs</div>
+        </div>
+
+        <div class="card" id="compose">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          </div>
+          <h3>Docker Compose Sidecar</h3>
+          <p>Add 1 tiny forwarder container to your <code>docker-compose.yml</code>. It reads stdout from all containers in the compose network and auto-maps each service into CalmLogs.</p>
+          <div class="code-box">docker compose logs -f | npx calmlogs</div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          </div>
+          <h3>Edge-Native Architecture</h3>
+          <p>Built for Cloudflare Workers, Durable Objects, and R2. Ingest millions of logs at 200+ edge locations with instant WebSocket live-tailing and cold storage archiving.</p>
+          <div class="code-box">Cloudflare Workers + D1 + R2</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Docker Compose Highlight -->
+  <section style="padding: 60px 0; background: #f4f4f5; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+    <div class="container">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 40px; align-items: center;">
+        <div>
+          <div class="badge" style="background: #e0e7ff; border-color: #c7d2fe; color: #3730a3;">Docker Compose Stack</div>
+          <h2 style="font-size: 28px; margin-bottom: 16px;">Drop 1 service into your compose file.</h2>
+          <p style="color: var(--text-muted); font-size: 14.5px; line-height: 1.6; margin-bottom: 20px;">
+            CalmLogs automatically parses container tags (like <code>postgres-1 | ...</code> and <code>redis-1 | ...</code>) and registers each service dynamically in the dashboard.
+          </p>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 13px; color: var(--text-main);">
+            <li style="display: flex; align-items: center; gap: 8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              No need to build custom Docker images or install agents
+            </li>
+            <li style="display: flex; align-items: center; gap: 8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Filter by specific Docker network or log the entire file
+            </li>
+            <li style="display: flex; align-items: center; gap: 8px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Cleans container prefixes so log messages stay readable
+            </li>
+          </ul>
+        </div>
+
+        <div style="background: #09090b; border: 1px solid #27272a; border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-md);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-family: var(--font-mono); font-size: 11px; color: #a1a1aa;">
+            <span>docker-compose.yml</span>
+            <button class="copy-btn" onclick="copyComposeSnippet(this)">Copy YAML</button>
+          </div>
+          <pre style="color: #e4e4e7; font-family: var(--font-mono); font-size: 11px; line-height: 1.6; overflow-x: auto;"><code>services:
+  # Add to your compose file:
+  calmlogs:
+    image: node:alpine
+    container_name: calmlogs-forwarder
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: >
+      sh -c "apk add --no-cache docker-cli docker-cli-compose &&
+      docker compose logs -f --no-color | npx -y calmlogs --project 'prod-stack'"</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison Matrix -->
+  <section class="comparison-section">
+    <div class="container">
+      <div class="section-head">
+        <h2>Why developers choose CalmLogs</h2>
+        <p>Built for teams who want instant clarity without heavy cloud agent configurations.</p>
+      </div>
+
+      <div class="comp-table-wrapper">
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th class="highlight-col">CalmLogs</th>
+              <th>Datadog / NewRelic</th>
+              <th>Grafana Loki</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Code changes required</strong></td>
+              <td class="highlight-col">Zero (pipe stdout or compose)</td>
+              <td>Custom SDKs & code patches</td>
+              <td>Promtail / vector config files</td>
+            </tr>
+            <tr>
+              <td><strong>License & Hosting</strong></td>
+              <td class="highlight-col">100% Open Source (MIT)</td>
+              <td>Proprietary SaaS ($$$)</td>
+              <td>Open Source (Complex cluster)</td>
+            </tr>
+            <tr>
+              <td><strong>Setup Time</strong></td>
+              <td class="highlight-col">&lt; 60 seconds</td>
+              <td>Hours / Days</td>
+              <td>Hours (Storage, Promtail)</td>
+            </tr>
+            <tr>
+              <td><strong>Infrastructure Footprint</strong></td>
+              <td class="highlight-col">Edge Serverless (Cloudflare)</td>
+              <td>Heavy Host Daemon (~200MB RAM)</td>
+              <td>Multiple pods / Kubernetes</td>
+            </tr>
+            <tr>
+              <td><strong>Live WebSockets Tail</strong></td>
+              <td class="highlight-col">Real-time fan-out built-in</td>
+              <td>Polling / Delay</td>
+              <td>LogQL streaming</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="faq-section">
+    <div class="container">
+      <div class="section-head">
+        <h2>Frequently Asked Questions</h2>
+        <p>Everything you need to know about CalmLogs architecture and open-source licensing.</p>
+      </div>
+
+      <div class="faq-grid">
+        <div class="faq-item">
+          <h4>Is CalmLogs really free and open source?</h4>
+          <p>Yes. CalmLogs is released under the MIT license. You can run it locally, self-host it on your own Cloudflare account for virtually zero cost, or deploy it in your own private cloud.</p>
+        </div>
+        <div class="faq-item">
+          <h4>How does it auto-detect Docker Compose services?</h4>
+          <p>The CLI parses standard compose log streams (e.g. <code>api-1 | ...</code>). It extracts the service name, strips the container instance suffix, and routes logs dynamically into separate services.</p>
+        </div>
+        <div class="faq-item">
+          <h4>What happens if my internet or connection drops?</h4>
+          <p>The CLI tool operates with non-blocking buffers and never crashes your primary application process. If an ingestion endpoint fails, your server keeps running smoothly without disruption.</p>
+        </div>
+        <div class="faq-item">
+          <h4>Can I use it with Python, Go, Rust, or Java?</h4>
+          <p>Yes! Any program that logs to stdout/stderr can be piped into <code>npx calmlogs</code>, or can use our native HTTP batch ingestion endpoint <code>POST /v1/logs</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h4>CalmLogs</h4>
+          <p style="max-width: 280px; margin-bottom: 12px; line-height: 1.6;">
+            A modern, open-source distributed logging experience. Zero boilerplate, zero data lock-in.
+          </p>
+          <p style="font-size: 11px; color: var(--text-subtle);">
+            Created with craft by <a href="https://saiakashneela.com" target="_blank" rel="noopener" style="color: var(--text-muted); font-weight: 600;">Sai Akash Neela</a> (<a href="https://saiakash.dev" target="_blank" rel="noopener" style="color: var(--text-muted);">saiakash.dev</a>).
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h5>Product</h5>
+          <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#compose">Docker Compose</a></li>
+            <li><a href="/docs/">Documentation</a></li>
+            <li><a href="https://github.com/SaiAkashNeela/calmlogs/releases" target="_blank" rel="noopener">Releases</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Community</h5>
+          <ul>
+            <li><a href="https://github.com/SaiAkashNeela/calmlogs" target="_blank" rel="noopener">GitHub Repository</a></li>
+            <li><a href="https://github.com/SaiAkashNeela/calmlogs/issues" target="_blank" rel="noopener">Issue Tracker</a></li>
+            <li><a href="https://github.com/SaiAkashNeela/calmlogs/discussions" target="_blank" rel="noopener">Discussions</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Credits & Design</h5>
+          <ul>
+            <li><a href="https://saiakashneela.com" target="_blank" rel="noopener">Sai Akash Neela</a></li>
+            <li><a href="https://saiakash.dev" target="_blank" rel="noopener">saiakash.dev</a></li>
+            <li><a href="https://geeksdesigns.com" target="_blank" rel="noopener">Geeks Designs</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>
+          &copy; 2026 CalmLogs Open Source. Released under the MIT License.
+        </div>
+        <div class="credits">
+          Designed with Hallmark standards &bull; Design by <a href="https://geeksdesigns.com" target="_blank" rel="noopener">geeksdesigns.com</a> &bull; Engineering by <a href="https://saiakashneela.com" target="_blank" rel="noopener">saiakashneela.com</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function copyCommand(text, btn) {
+      navigator.clipboard.writeText(text);
+      const span = btn.querySelector('span');
+      const original = span.innerText;
+      span.innerText = 'Copied!';
+      setTimeout(() => { span.innerText = original; }, 2000);
+    }
+
+    function copyComposeSnippet(btn) {
+      const yaml = `services:\n  calmlogs:\n    image: node:alpine\n    container_name: calmlogs-forwarder\n    restart: unless-stopped\n    volumes:\n      - /var/run/docker.sock:/var/run/docker.sock\n    command: >\n      sh -c "apk add --no-cache docker-cli docker-cli-compose &&\n      docker compose logs -f --no-color | npx -y calmlogs --project 'prod-stack'"`;
+      navigator.clipboard.writeText(yaml);
+      btn.innerText = 'Copied!';
+      setTimeout(() => { btn.innerText = 'Copy YAML'; }, 2000);
+    }
+
+    function switchTab(svc, btn) {
+      document.querySelectorAll('.t-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const lines = document.querySelectorAll('.log-line');
+      lines.forEach(l => {
+        if (svc === 'all' || l.getAttribute('data-svc') === svc) {
+          l.style.display = 'flex';
+        } else {
+          l.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

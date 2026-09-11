@@ -173,8 +173,11 @@ export default {
       return new Response(null, {
         headers: {
           "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-API-Key",
+          "Access-Control-Max-Age": "86400",
+          "X-Content-Type-Options": "nosniff",
+          "X-Frame-Options": "DENY"
         }
       });
     }
@@ -182,6 +185,9 @@ export default {
     const addCors = (res: Response) => {
       const headers = new Headers(res.headers);
       headers.set("Access-Control-Allow-Origin", "*");
+      headers.set("X-Content-Type-Options", "nosniff");
+      headers.set("X-Frame-Options", "DENY");
+      headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
       return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
     };
 
@@ -412,11 +418,22 @@ export default {
     // Ingestion API (Service to platform - supports single LogEvent or batch LogEvent[])
     if (url.pathname === '/v1/logs' && request.method === 'POST') {
       try {
+        // Defensive Payload Size Check (Max 5MB)
+        const contentLength = parseInt(request.headers.get("Content-Length") || "0", 10);
+        if (contentLength > 5 * 1024 * 1024) {
+          return addCors(new Response(JSON.stringify({ error: "Payload Too Large: maximum body size is 5MB" }), { status: 413 }));
+        }
+
         const rawBody: any = await request.json();
         const logsArray: any[] = Array.isArray(rawBody) ? rawBody : [rawBody];
         
         if (logsArray.length === 0) {
           return addCors(new Response(JSON.stringify({ error: "Empty logs payload" }), { status: 400 }));
+        }
+
+        // Defensive Batch Limit (Max 1,000 logs per batch)
+        if (logsArray.length > 1000) {
+          return addCors(new Response(JSON.stringify({ error: "Batch limit exceeded: maximum 1,000 logs per request" }), { status: 400 }));
         }
 
         const now = new Date().toISOString();
@@ -445,7 +462,7 @@ export default {
           }
         }
 
-        // Group by project and service
+        // Group by project and service with strict input sanitization
         const groups = new Map<string, { rawProj: string; rawServ: string; items: any[] }>();
         for (const item of logsArray) {
           let rawProj = typeof item.project === 'string' ? item.project.trim() : '';
@@ -458,6 +475,10 @@ export default {
           // Safe fallback defaults so logs are never dropped
           if (!rawProj) rawProj = 'default';
           if (!rawServ) rawServ = 'app';
+
+          // Sanitize identifiers against delimiter injection or directory traversal
+          rawProj = rawProj.replace(/[^a-zA-Z0-9_\-\.]/g, '_').slice(0, 64);
+          rawServ = rawServ.replace(/[^a-zA-Z0-9_\-\.]/g, '_').slice(0, 64);
           
           const groupKey = `${rawProj}:::${rawServ}`;
           if (!groups.has(groupKey)) {
@@ -543,6 +564,7 @@ export default {
             service: serviceName,
             project_id: projId!,
             service_id: servId!,
+            message: typeof item.message === 'string' ? item.message.slice(0, 65536) : String(item.message || ''),
             timestamp: item.timestamp || now
           }));
 

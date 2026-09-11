@@ -27,6 +27,25 @@ async function startServer() {
     wranglerProxy(req, res, next);
   });
 
+  // Defensive Security Headers
+  app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+  });
+
+  // Serve documentation portal and landing website
+  app.use('/docs', express.static(path.join(process.cwd(), 'docs')));
+  app.get('/docs', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'docs', 'index.html'));
+  });
+
+  app.use('/website', express.static(path.join(process.cwd(), 'website')));
+  app.get('/website', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'website', 'index.html'));
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
