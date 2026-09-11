@@ -62,7 +62,7 @@ CalmLogs regex parses the container instance prefix, strips `-1` / `_1`, routes 
 - **Key Hashing:** Plaintext keys are never stored; only SHA-256 digests exist in SQLite.
 - **RBAC:** Roles `admin`, `write`, and `read`. Read-only accounts cannot create or delete projects or services.
 - **Direct Invitations:** Teams invite members via direct shareable link `/?invitation_id=...` without needing SMTP or email server configurations.
-- **Audited:** 100/100 Defensive Security Audit rating against OWASP Top 10 guidelines.
+- **Audited:** Defensive Security Audit rating against OWASP Top 10 guidelines.
 
 ## Official Links
 - **Website:** https://calmlogs.com

@@ -170,7 +170,7 @@ curl -X POST http://localhost:3000/v1/logs \
 
 ## Security & RBAC
 
-CalmLogs passed a **100/100 Defensive Cyber Security Audit**.  
+CalmLogs passed a **Defensive Cyber Security Audit**.  
 See the full report in [`docs/security-audit.md`](docs/security-audit.md).
 
 - **SHA-256 Key Security:** Plaintext ingestion keys are never stored; only one-way SHA-256 hashes are persisted in SQLite.

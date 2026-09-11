@@ -17,6 +17,15 @@ export default function FeedbackModal({ isOpen, userEmail, onClose }: FeedbackMo
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!feedback.trim()) return;
+
+    const subject = encodeURIComponent(`[CalmLogs Feedback] ${category.toUpperCase()}`);
+    const body = encodeURIComponent(
+      `Hello Sai Akash,\n\nTopic: ${category}\nUser: ${userEmail || 'Anonymous'}\n\nNote:\n${feedback.trim()}\n\n---\nSent via CalmLogs Web Console`
+    );
+    const mailtoUrl = `mailto:hello@saiakashneela.com?subject=${subject}&body=${body}`;
+
+    window.location.href = mailtoUrl;
+
     setSubmitted(true);
     setTimeout(() => {
       setFeedback('');
@@ -92,12 +101,13 @@ export default function FeedbackModal({ isOpen, userEmail, onClose }: FeedbackMo
             <div className="flex items-center justify-between pt-2 border-t border-zinc-100">
               <div className="flex items-center gap-3 text-zinc-500 text-xs">
                 <a
-                  href="https://ai.google.dev"
+                  href="https://docs.calmlogs.com"
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-zinc-900 flex items-center gap-1 text-[11px]"
+                  className="hover:text-zinc-900 flex items-center gap-1 text-[11px] transition-colors"
                 >
-                  <BookOpen className="w-3 h-3" /> Docs
+                  <BookOpen className="w-3 h-3 text-emerald-600" />
+                  <span>Docs</span>
                 </a>
               </div>
 
@@ -105,14 +115,14 @@ export default function FeedbackModal({ isOpen, userEmail, onClose }: FeedbackMo
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-3 py-1.5 text-xs font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!feedback.trim()}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold font-sans text-white bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold font-sans text-white bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all shadow-xs cursor-pointer"
                 >
                   <Send className="w-3 h-3" />
                   <span>Send</span>

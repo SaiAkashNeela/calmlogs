@@ -43,13 +43,20 @@ export default function AuthScreen({ onLogin }: { onLogin: () => void }) {
         </div>
 
         {invitationId && (
-          <div className="p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-mono space-y-1">
-            <div className="flex items-center gap-1.5 font-semibold text-emerald-900 font-sans">
+          <div className="p-3.5 bg-emerald-50/90 border border-emerald-200 rounded-xl text-xs text-emerald-800 space-y-2 font-sans">
+            <div className="flex items-center gap-1.5 font-semibold text-emerald-900">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               <span>Workspace Invitation</span>
             </div>
-            <p className="text-[11px] text-emerald-700 leading-relaxed">
-              You have been invited to collaborate on a workspace. Sign in to review and accept the invite.
+            <p className="text-[11px] text-emerald-800 leading-relaxed">
+              You have been invited to collaborate on a CalmLogs workspace!
             </p>
+            <div className="flex items-start gap-2 p-2 bg-white/70 border border-emerald-200 rounded-lg text-[11px] text-emerald-900">
+              <span className="text-emerald-600 font-bold shrink-0">ℹ</span>
+              <span>
+                Please sign in with your <strong>Google Account</strong> or <strong>Google Workspace account</strong> (@yourcompany.com) to review and accept the invite.
+              </span>
+            </div>
           </div>
         )}
 

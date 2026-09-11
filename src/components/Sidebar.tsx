@@ -12,7 +12,8 @@ import {
   Building,
   ChevronUp,
   UserCheck,
-  Users
+  Users,
+  BookOpen
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -305,6 +306,17 @@ export default function Sidebar({
                 <Building className="w-3.5 h-3.5 text-zinc-500" />
                 <span>Switch Workspace</span>
               </button>
+
+              <a
+                href="https://docs.calmlogs.com"
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setShowProfileMenu(false)}
+                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 transition-colors text-left"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Documentation</span>
+              </a>
 
               <button
                 onClick={() => {

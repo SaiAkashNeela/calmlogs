@@ -428,7 +428,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs space-y-1.5 font-mono">
+            <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs space-y-2 font-mono">
               <div className="flex justify-between">
                 <span className="text-zinc-500">Workspace:</span>
                 <span className="font-semibold text-zinc-900 font-sans">{inviteModalData.orgName}</span>
@@ -437,10 +437,16 @@ export default function App() {
                 <span className="text-zinc-500">Invited Role:</span>
                 <span className="uppercase font-semibold text-emerald-700">{inviteModalData.role}</span>
               </div>
+              {user?.email && (
+                <div className="flex justify-between border-t border-zinc-200/70 pt-1.5">
+                  <span className="text-zinc-500">Google Account:</span>
+                  <span className="text-zinc-800 font-medium truncate max-w-[200px]" title={user.email}>{user.email}</span>
+                </div>
+              )}
             </div>
 
             <p className="text-xs text-zinc-600 font-sans leading-relaxed">
-              Accepting will grant you access to stream, view, and collaborate on this workspace's logs and services.
+              Accepting will link your Google account to this workspace with <strong className="uppercase">{inviteModalData.role}</strong> permissions to view, search, and collaborate on logs.
             </p>
 
             <div className="flex items-center justify-end gap-2.5 pt-2">
