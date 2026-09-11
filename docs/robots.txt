@@ -1,0 +1,38 @@
+# CalmLogs robots.txt
+# https://calmlogs.com / https://docs.calmlogs.com
+
+User-agent: *
+Allow: /
+Allow: /docs/
+Allow: /website/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /logo.png
+Allow: /favicon.png
+Disallow: /api/
+Disallow: /v1/logs
+
+# AI Search & Crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+Allow: /llms.txt
+
+User-agent: GPTBot
+Allow: /
+Allow: /llms.txt
+
+User-agent: PerplexityBot
+Allow: /
+Allow: /llms.txt
+
+User-agent: Applebot
+Allow: /
+
+Sitemap: https://calmlogs.com/sitemap.xml
+Sitemap: https://docs.calmlogs.com/sitemap.xml

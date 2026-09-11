@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="public/logo.png" alt="CalmLogs Logo" width="72" height="72" style="border-radius: 14px;" />
+
 # CalmLogs
 
 **Minimalist, Edge-Native, Open-Source Distributed Logging for Developers.**  
@@ -11,6 +13,12 @@
 [![Zero SDK Bloat](https://img.shields.io/badge/SDK%20Bloat-Zero-blue.svg)](#)
 
 [**Website (calmlogs.com)**](https://calmlogs.com) &bull; [**Documentation (docs.calmlogs.com)**](https://docs.calmlogs.com) &bull; [**LLM Spec (llms.txt)**](public/llms.txt)
+
+<p align="center">
+  <a href="https://deploy.workers.cloudflare.com/?url=https://github.com/SaiAkashNeela/calmlogs">
+    <img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare Workers" />
+  </a>
+</p>
 
 </div>
 
@@ -174,7 +182,11 @@ See the full report in [`docs/security-audit.md`](docs/security-audit.md).
 
 ## Self-Hosting Guide
 
-Deploy your own CalmLogs cluster on Cloudflare in 5 minutes:
+### 1-Click Deploy to Cloudflare Workers
+
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/SaiAkashNeela/calmlogs)
+
+### Or Deploy Manually via CLI
 
 ```bash
 # 1. Clone the repository

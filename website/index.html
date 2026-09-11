@@ -94,7 +94,7 @@
   </script>
 
   <style>
-    /* Hallmark Tokens · Clean Tactile Theme */
+    /* CalmLogs Theme Tokens · Clean Minimal Theme */
     :root {
       --bg: #fafafa;
       --paper: #ffffff;
@@ -299,26 +299,94 @@
       flex-wrap: wrap;
     }
 
-    /* Command Bar */
-    .command-bar {
+    /* Hero Interactive Runner & Animated Multi-Stack Ticker */
+    .hero-runner-wrapper {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      max-width: 100%;
+    }
+
+    .stack-pills {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #f4f4f5;
+      padding: 3px 4px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    .stack-pill {
+      background: transparent;
+      border: none;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      color: var(--text-muted);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .stack-pill:hover {
+      color: var(--text-main);
+    }
+
+    .stack-pill.active {
+      background: #ffffff;
+      color: #047857;
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .command-bar-animated {
       display: inline-flex;
       align-items: center;
       gap: 12px;
       background: var(--dark-card);
       border: 1px solid var(--dark-card-border);
       border-radius: var(--radius-md);
-      padding: 10px 16px;
+      padding: 8px 14px;
       color: #fafafa;
       font-family: var(--font-mono);
       font-size: 13px;
       box-shadow: var(--shadow-lg);
       max-width: 100%;
-      overflow-x: auto;
+      position: relative;
     }
 
     .cmd-prefix {
       color: #34d399;
       user-select: none;
+      font-weight: bold;
+    }
+
+    .cmd-ticker-window {
+      height: 28px;
+      line-height: 28px;
+      overflow: hidden;
+      position: relative;
+      min-width: 290px;
+      text-align: left;
+    }
+
+    .cmd-ticker-track {
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .cmd-ticker-item {
+      height: 28px;
+      line-height: 28px;
+      white-space: nowrap;
+      color: #f4f4f5;
     }
 
     .copy-btn {
@@ -339,6 +407,80 @@
     .copy-btn:hover {
       background: #3f3f46;
       color: #ffffff;
+    }
+
+    /* Mobile Drawer */
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 16px;
+      cursor: pointer;
+      color: var(--text-main);
+    }
+
+    .mobile-nav-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+    }
+
+    .mobile-nav-overlay.open {
+      display: block;
+    }
+
+    .mobile-nav-panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 280px;
+      background: #ffffff;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+      animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideInRight {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+
+    .mobile-nav-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 14px;
+    }
+
+    .mobile-close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .mobile-nav-links {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .mobile-nav-links a:hover {
+      color: var(--text-main);
     }
 
     /* Live Stream Showcase */
@@ -730,12 +872,25 @@
       color: var(--text-main);
     }
 
-    /* Mobile Adaptations */
+    /* Mobile & Tablet Adaptations */
     @media (max-width: 768px) {
       .hero { padding: 48px 0 36px; }
       .nav-links { display: none; }
+      .nav-actions { display: none; }
+      .mobile-menu-btn { display: inline-flex; }
+      .hero-cta-group { flex-direction: column; gap: 16px; }
+      .command-bar-animated { width: 100%; justify-content: space-between; }
+      .cmd-ticker-window { min-width: 0; flex: 1; font-size: 12px; }
       .footer-grid { grid-template-columns: 1fr; gap: 28px; }
       .grid-3 { grid-template-columns: 1fr; }
+      .free-tier-cards { grid-template-columns: 1fr !important; }
+      .terminal-tabs { overflow-x: auto; max-width: 100%; padding-bottom: 2px; }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .free-tier-cards { grid-template-columns: repeat(2, 1fr) !important; }
+      .grid-3 { grid-template-columns: repeat(2, 1fr); }
+      .hero-cta-group { flex-direction: column; }
     }
   </style>
 </head>
@@ -746,13 +901,7 @@
     <div class="container">
       <div class="nav-inner">
         <a href="/" class="brand" aria-label="CalmLogs Homepage">
-          <div class="brand-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round">
-              <line x1="4" y1="6" x2="20" y2="6"></line>
-              <line x1="4" y1="12" x2="14" y2="12"></line>
-              <line x1="4" y1="18" x2="18" y2="18"></line>
-            </svg>
-          </div>
+          <img src="logo.png" alt="CalmLogs" onerror="this.src='/logo.png'" style="width: 28px; height: 28px; object-fit: contain; border-radius: 6px;" />
           <span>CalmLogs</span>
         </a>
 
@@ -766,14 +915,41 @@
         </nav>
 
         <div class="nav-actions">
-          <a href="https://docs.calmlogs.com" class="btn btn-ghost">Docs</a>
-          <a href="/" class="btn btn-dark" style="background: #10b981; color: #ffffff; border-color: #059669;">
+          <a href="/" class="btn btn-dark" style="background: #10b981; color: #ffffff; border-color: #059669; font-weight: 600;">
             Try CalmLogs Free
           </a>
         </div>
+
+        <button class="mobile-menu-btn" onclick="toggleMobileNav()" aria-label="Toggle navigation menu">
+          ☰
+        </button>
       </div>
     </div>
   </header>
+
+  <!-- Mobile Navigation Overlay -->
+  <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMobileNav()">
+    <div class="mobile-nav-panel" onclick="event.stopPropagation()">
+      <div class="mobile-nav-header">
+        <div class="brand">
+          <img src="logo.png" alt="CalmLogs" onerror="this.src='/logo.png'" style="width: 24px; height: 24px; object-fit: contain; border-radius: 4px;" />
+          <span>CalmLogs</span>
+        </div>
+        <button class="mobile-close-btn" onclick="toggleMobileNav()">&times;</button>
+      </div>
+      <div class="mobile-nav-links">
+        <a href="#features" onclick="toggleMobileNav()">Features</a>
+        <a href="#compose" onclick="toggleMobileNav()">Docker Compose</a>
+        <a href="#free-tier" onclick="toggleMobileNav()">Cloudflare Free Tier</a>
+        <a href="#architecture" onclick="toggleMobileNav()">Architecture</a>
+        <a href="https://docs.calmlogs.com" target="_blank" rel="noopener">Documentation</a>
+        <a href="https://github.com/SaiAkashNeela/calmlogs" target="_blank" rel="noopener">GitHub</a>
+      </div>
+      <a href="/" class="btn btn-dark" style="background: #10b981; color: #ffffff; border-color: #059669; text-align: center; justify-content: center; margin-top: 12px; font-weight: 600;">
+        Try CalmLogs Free
+      </a>
+    </div>
+  </div>
 
   <!-- Hero -->
   <section class="hero">
@@ -787,18 +963,35 @@
       </p>
 
       <div class="hero-cta-group">
-        <a href="/" class="btn btn-dark" style="padding: 12px 24px; font-size: 14px; background: #18181b;">
-          Launch CalmLogs App →
+        <a href="/" class="btn btn-dark" style="padding: 12px 24px; font-size: 14px; background: #10b981; color: #ffffff; border-color: #059669; font-weight: 600;">
+          Try CalmLogs Free →
         </a>
-        <div class="command-bar">
-          <span class="cmd-prefix">$</span>
-          <span id="hero-cmd">npm start | npx calmlogs</span>
-          <button class="copy-btn" onclick="copyCommand('npm start | npx calmlogs', this)" aria-label="Copy command">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <span>Copy</span>
-          </button>
+
+        <div class="hero-runner-wrapper">
+          <div class="stack-pills">
+            <button class="stack-pill active" onclick="setHeroStack(0, this)">npm</button>
+            <button class="stack-pill" onclick="setHeroStack(1, this)">bun</button>
+            <button class="stack-pill" onclick="setHeroStack(2, this)">pnpm</button>
+            <button class="stack-pill" onclick="setHeroStack(3, this)">yarn</button>
+            <button class="stack-pill" onclick="setHeroStack(4, this)">docker</button>
+          </div>
+          <div class="command-bar-animated" id="hero-cmd-box">
+            <span class="cmd-prefix">$</span>
+            <div class="cmd-ticker-window">
+              <div class="cmd-ticker-track" id="cmd-ticker-track">
+                <div class="cmd-ticker-item">npm start | npx calmlogs</div>
+                <div class="cmd-ticker-item">bun dev | bunx calmlogs</div>
+                <div class="cmd-ticker-item">pnpm start | pnpm dlx calmlogs</div>
+                <div class="cmd-ticker-item">yarn start | yarn dlx calmlogs</div>
+                <div class="cmd-ticker-item">docker compose logs -f | npx calmlogs</div>
+              </div>
+            </div>
+            <button class="copy-btn" onclick="copyHeroCommand(this)" aria-label="Copy command">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <span>Copy</span>
+            </button>
+          </div>
         </div>
-        <a href="https://docs.calmlogs.com" class="btn btn-ghost" style="padding: 12px 20px; font-size: 14px;">Documentation</a>
       </div>
 
       <!-- Live Terminal Showcase -->
@@ -1181,19 +1374,82 @@
           &copy; 2026 CalmLogs Open Source. Released under the MIT License.
         </div>
         <div class="credits">
-          Designed with Hallmark standards &bull; Design by <a href="https://geeksdesigns.com" target="_blank" rel="noopener">geeksdesigns.com</a> &bull; Engineering by <a href="https://saiakashneela.com" target="_blank" rel="noopener">saiakashneela.com</a>
+          Design by <a href="https://geeksdesigns.com" target="_blank" rel="noopener">geeksdesigns.com</a> &bull; Engineering by <a href="https://saiakashneela.com" target="_blank" rel="noopener">saiakashneela.com</a> (<a href="https://saiakash.dev" target="_blank" rel="noopener">saiakash.dev</a>)
         </div>
       </div>
     </div>
   </footer>
 
   <script>
+    // Mobile Navigation Drawer Toggle
+    function toggleMobileNav() {
+      const overlay = document.getElementById('mobileNavOverlay');
+      if (overlay) {
+        overlay.classList.toggle('open');
+      }
+    }
+
+    // Animated Multi-Stack Runner
+    const heroCommands = [
+      'npm start | npx calmlogs',
+      'bun dev | bunx calmlogs',
+      'pnpm start | pnpm dlx calmlogs',
+      'yarn start | yarn dlx calmlogs',
+      'docker compose logs -f | npx calmlogs'
+    ];
+    let activeStackIndex = 0;
+    let tickerInterval = null;
+    let isHoveringCmd = false;
+
+    function updateHeroStackUI(idx) {
+      activeStackIndex = idx;
+      const track = document.getElementById('cmd-ticker-track');
+      if (track) {
+        track.style.transform = `translateY(-${idx * 28}px)`;
+      }
+      const pills = document.querySelectorAll('.stack-pill');
+      pills.forEach((p, i) => {
+        if (i === idx) p.classList.add('active');
+        else p.classList.remove('active');
+      });
+    }
+
+    function setHeroStack(idx, btn) {
+      updateHeroStackUI(idx);
+    }
+
+    function startHeroTicker() {
+      if (tickerInterval) clearInterval(tickerInterval);
+      tickerInterval = setInterval(() => {
+        if (!isHoveringCmd) {
+          const next = (activeStackIndex + 1) % heroCommands.length;
+          updateHeroStackUI(next);
+        }
+      }, 2600);
+    }
+
+    const cmdBox = document.getElementById('hero-cmd-box');
+    if (cmdBox) {
+      cmdBox.addEventListener('mouseenter', () => { isHoveringCmd = true; });
+      cmdBox.addEventListener('mouseleave', () => { isHoveringCmd = false; });
+    }
+    startHeroTicker();
+
+    function copyHeroCommand(btn) {
+      const cmd = heroCommands[activeStackIndex];
+      navigator.clipboard.writeText(cmd);
+      const span = btn.querySelector('span');
+      const orig = span ? span.innerText : 'Copy';
+      if (span) span.innerText = 'Copied!';
+      setTimeout(() => { if (span) span.innerText = orig; }, 2000);
+    }
+
     function copyCommand(text, btn) {
       navigator.clipboard.writeText(text);
       const span = btn.querySelector('span');
-      const original = span.innerText;
-      span.innerText = 'Copied!';
-      setTimeout(() => { span.innerText = original; }, 2000);
+      const original = span ? span.innerText : 'Copy';
+      if (span) span.innerText = 'Copied!';
+      setTimeout(() => { if (span) span.innerText = original; }, 2000);
     }
 
     function copyComposeSnippet(btn) {

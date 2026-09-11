@@ -75,6 +75,15 @@ services:
 ]
 ```
 
+## Live Visual Analytics
+- Real-time SVG Donut / Pie chart breaking down log levels (debug, info, warn, error).
+- 16-bucket throughput sparkline graph highlighting error spikes.
+- Live Error Rate KPI with health indicator.
+- Top-events horizontal distribution bars.
+
+## 1-Click Cloudflare Deployment
+- Deploy button: `https://deploy.workers.cloudflare.com/?url=https://github.com/SaiAkashNeela/calmlogs`
+
 ## Full Documentation
 For complete technical manual and extended architecture details, refer to:
 - [Full LLM Manual](https://calmlogs.com/llms-full.txt)

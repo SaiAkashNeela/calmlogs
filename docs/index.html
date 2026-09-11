@@ -490,11 +490,25 @@
         bottom: 0;
         z-index: 60;
         width: 280px;
-        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        background: #ffffff;
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);
+        overflow-y: auto;
       }
       aside.sidebar.open { display: block; }
+      .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        top: 60px;
+        background: rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(2px);
+        z-index: 55;
+      }
+      .sidebar-backdrop.open { display: block; }
       .mobile-menu-btn { display: block; }
-      main.content { padding: 32px 24px; }
+      main.content { padding: 24px 16px; width: 100%; min-width: 0; }
+      .header-links a:not(.btn-app) { display: none; }
+      .version-tag { display: none; }
     }
   </style>
 </head>
@@ -505,13 +519,7 @@
     <div class="brand-group">
       <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Toggle navigation">☰</button>
       <a href="https://calmlogs.com" class="brand">
-        <div class="brand-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round">
-            <line x1="4" y1="6" x2="20" y2="6"></line>
-            <line x1="4" y1="12" x2="14" y2="12"></line>
-            <line x1="4" y1="18" x2="18" y2="18"></line>
-          </svg>
-        </div>
+        <img src="logo.png" alt="CalmLogs" onerror="this.src='/logo.png'" style="width: 26px; height: 26px; object-fit: contain; border-radius: 6px;" />
         <span>CalmLogs</span>
       </a>
       <span class="version-tag">Docs v1.0</span>
@@ -523,6 +531,9 @@
       <a href="/" class="btn-app">Launch App →</a>
     </div>
   </header>
+
+  <!-- Mobile Backdrop -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
 
   <div class="docs-layout">
     <!-- Sidebar -->
@@ -546,6 +557,7 @@
         <div class="nav-title">Integrations & Workloads</div>
         <ul class="nav-list">
           <li><a href="#docker-compose" class="nav-link">Docker Compose Sidecar</a></li>
+          <li><a href="#metrics-charts" class="nav-link">Live Visual Metrics & Charts</a></li>
           <li><a href="#languages" class="nav-link">Languages (Node, Py, Go, Rust)</a></li>
           <li><a href="#http-api" class="nav-link">HTTP Ingestion API</a></li>
         </ul>
@@ -730,6 +742,52 @@ redis_1    | Ready to accept connections</code></pre>
         </p>
       </section>
 
+      <!-- Section: Live Visual Metrics & Charts -->
+      <section class="doc-block" id="metrics-charts">
+        <h2>Live Visual Metrics & Charts</h2>
+        <p>
+          CalmLogs includes a high-density, real-time analytics bar above your log stream to give instant visual insights without needing a heavy APM agent:
+        </p>
+
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Visualization</th>
+                <th>Format</th>
+                <th>Real-Time Insight</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Level Split</strong></td>
+                <td>Interactive SVG Donut / Pie</td>
+                <td>Proportions of <code>info</code> (blue), <code>warn</code> (amber), <code>error</code> (rose), and <code>debug</code> (slate) across buffered logs.</td>
+              </tr>
+              <tr>
+                <td><strong>Throughput Graph</strong></td>
+                <td>16-bucket bar sparkline</td>
+                <td>Time-sliced log velocity with error spikes highlighted in vivid red.</td>
+              </tr>
+              <tr>
+                <td><strong>Error Rate KPI</strong></td>
+                <td>Live percentage & status pill</td>
+                <td>Instant health diagnosis (emerald green when 0%, amber when &lt;5%, rose red when elevated).</td>
+              </tr>
+              <tr>
+                <td><strong>Top Events</strong></td>
+                <td>Segmented horizontal progress bars</td>
+                <td>Identifies your service's highest-frequency event types (e.g. <code>http_request</code>, <code>query_exec</code>).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          You can toggle the charts panel anytime using the <strong>Charts</strong> button in the top action bar to maximize vertical space for raw log lines.
+        </p>
+      </section>
+
       <!-- Section: Language Guides -->
       <section class="doc-block" id="languages">
         <h2>Language & Framework Guides</h2>
@@ -852,7 +910,15 @@ cargo run --release | npx calmlogs --project <span class="syn-str">"trading"</sp
       <!-- Section: Self-Hosting -->
       <section class="doc-block" id="self-hosting">
         <h2>Self-Hosting in 5 Minutes</h2>
-        <p>Deploy your own instance of CalmLogs to your Cloudflare account:</p>
+        <p>Deploy your own instance of CalmLogs to your Cloudflare account with a single click:</p>
+
+        <p style="margin: 16px 0;">
+          <a href="https://deploy.workers.cloudflare.com/?url=https://github.com/SaiAkashNeela/calmlogs" target="_blank" rel="noopener">
+            <img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare Workers" style="height: 36px;" />
+          </a>
+        </p>
+
+        <p>Or deploy manually via CLI in 4 simple commands:</p>
         <div class="code-box">
           <div class="code-top"><span>Bash</span><button class="copy-btn" onclick="copySnippet(this)">Copy</button></div>
           <pre><code><span class="syn-comm"># 1. Clone repository</span>

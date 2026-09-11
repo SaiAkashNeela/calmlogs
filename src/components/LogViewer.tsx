@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { LogEvent, LogLevel } from '../types';
 import { format } from 'date-fns';
 import {
@@ -11,10 +11,13 @@ import {
   Pause,
   Play,
   Trash2,
-  Brush,
+  BrushCleaning,
   Download,
   ArrowDown,
   Activity,
+  BarChart2,
+  PieChart,
+  TrendingUp,
 } from 'lucide-react';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import { clsx, type ClassValue } from 'clsx';
@@ -52,6 +55,7 @@ export default function LogViewer({
   const [activeLevels, setActiveLevels] = useState<Set<LogLevel>>(new Set(['debug', 'info', 'warn', 'error']));
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showDeleteServiceModal, setShowDeleteServiceModal] = useState(false);
+  const [showCharts, setShowCharts] = useState(true);
   
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<any>(null);
@@ -281,35 +285,52 @@ export default function LogViewer({
               {isPaused ? <Play className="w-3.5 h-3.5 text-amber-700" /> : <Pause className="w-3.5 h-3.5" />}
             </button>
 
-            {/* Clear logs with brush icon */}
+            {/* Clear logs with cleaning brush icon and confirmation */}
             {showClearConfirm ? (
-              <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 border border-amber-200 rounded-md text-[11px] font-mono animate-in fade-in duration-100">
-                <span className="text-amber-800 font-medium">Clear {logs.length} logs?</span>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 border border-amber-300 rounded-md text-[11px] font-mono shadow-xs animate-in fade-in zoom-in-95 duration-150">
+                <BrushCleaning className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                <span className="text-amber-900 font-semibold">
+                  {logs.length > 0 ? `Clear ${logs.length} logs?` : "Clear log buffer?"}
+                </span>
                 <button
-                  onClick={handleClear}
-                  className="px-1.5 py-0.5 bg-amber-600 hover:bg-amber-700 text-white rounded text-[10px] font-medium transition-colors"
+                  onClick={() => {
+                    handleClear();
+                    setShowClearConfirm(false);
+                  }}
+                  className="px-2 py-0.5 bg-amber-600 hover:bg-amber-700 text-white rounded font-medium text-[10px] transition-colors shadow-2xs cursor-pointer"
                 >
-                  Clear
+                  Yes, Clear
                 </button>
                 <button
                   onClick={() => setShowClearConfirm(false)}
-                  className="px-1.5 py-0.5 text-zinc-600 hover:text-zinc-900 rounded text-[10px] transition-colors"
+                  className="px-1.5 py-0.5 text-zinc-600 hover:text-zinc-900 hover:bg-amber-100/60 rounded text-[10px] transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
               </div>
             ) : (
               <button
-                onClick={() => {
-                  if (logs.length > 0) setShowClearConfirm(true);
-                }}
-                disabled={logs.length === 0}
+                onClick={() => setShowClearConfirm(true)}
                 title="Clear current log buffer"
-                className="p-1.5 rounded-md bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                className="p-1.5 rounded-md bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50 transition-colors cursor-pointer"
               >
-                <Brush className="w-3.5 h-3.5" />
+                <BrushCleaning className="w-3.5 h-3.5" />
               </button>
             )}
+
+            {/* Toggle Charts / Metrics */}
+            <button
+              onClick={() => setShowCharts(!showCharts)}
+              title={showCharts ? "Hide metrics charts" : "Show metrics charts"}
+              className={cn(
+                "p-1.5 rounded-md text-xs font-mono font-medium border transition-colors flex items-center gap-1",
+                showCharts
+                  ? "bg-zinc-100 border-zinc-300 text-zinc-900"
+                  : "bg-white border-zinc-200 text-zinc-500 hover:text-zinc-950 hover:bg-zinc-50"
+              )}
+            >
+              <BarChart2 className="w-3.5 h-3.5" />
+            </button>
 
             {/* Export JSONL */}
             <button
@@ -371,6 +392,11 @@ export default function LogViewer({
             )}
           </div>
         </div>
+
+        {/* Visual Charts & Metrics Strip */}
+        {showCharts && logs.length > 0 && (
+          <ServiceMetricsStrip logs={logs} levelCounts={levelCounts} />
+        )}
 
         {/* Table Column Header */}
         <div className="h-7 px-4 bg-zinc-50/90 border-b border-zinc-200 flex items-center font-mono text-[10px] text-zinc-500 uppercase tracking-wider shrink-0 select-none">
@@ -694,3 +720,188 @@ function CopyButton({ text, label }: { text: string; label?: string }) {
     </button>
   );
 }
+
+function ServiceMetricsStrip({ logs, levelCounts }: { logs: LogEvent[]; levelCounts: Record<LogLevel, number> }) {
+  const total = logs.length;
+  if (total === 0) return null;
+
+  const errorCount = levelCounts.error || 0;
+  const warnCount = levelCounts.warn || 0;
+  const infoCount = levelCounts.info || 0;
+  const debugCount = levelCounts.debug || 0;
+
+  const errorPct = ((errorCount / total) * 100).toFixed(1);
+  const warnPct = ((warnCount / total) * 100).toFixed(1);
+  const infoPct = ((infoCount / total) * 100).toFixed(1);
+  const debugPct = ((debugCount / total) * 100).toFixed(1);
+
+  // SVG Donut Calculations: circumference for r=15 is 2 * PI * 15 ≈ 94.25
+  const c = 94.25;
+  const errLen = (errorCount / total) * c;
+  const warnLen = (warnCount / total) * c;
+  const infoLen = (infoCount / total) * c;
+  const debugLen = (debugCount / total) * c;
+
+  let currentOffset = 0;
+  const segments = [
+    { name: 'error', len: errLen, color: '#f43f5e', offset: currentOffset },
+    { name: 'warn', len: warnLen, color: '#f59e0b', offset: (currentOffset -= errLen) },
+    { name: 'info', len: infoLen, color: '#0ea5e9', offset: (currentOffset -= warnLen) },
+    { name: 'debug', len: debugLen, color: '#71717a', offset: (currentOffset -= infoLen) },
+  ];
+
+  // Activity Sparkline (16 bars across recent logs)
+  const buckets = useMemo(() => {
+    const count = 16;
+    const res = Array.from({ length: count }, () => ({ total: 0, hasError: false }));
+    const sample = logs.slice(0, 300);
+    if (sample.length === 0) return res;
+
+    const chunkSize = Math.max(1, Math.ceil(sample.length / count));
+    for (let i = 0; i < sample.length; i++) {
+      const bIdx = Math.min(Math.floor(i / chunkSize), count - 1);
+      const targetIdx = count - 1 - bIdx;
+      res[targetIdx].total += 1;
+      if (sample[i].level === 'error') res[targetIdx].hasError = true;
+    }
+    return res;
+  }, [logs]);
+
+  const maxBucket = Math.max(...buckets.map(b => b.total), 1);
+
+  // Top 2 Events
+  const topEvents = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const l of logs) {
+      const ev = l.event || 'general';
+      counts[ev] = (counts[ev] || 0) + 1;
+    }
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 2);
+  }, [logs]);
+
+  return (
+    <div className="border-b border-zinc-200 bg-[#fbfbfa] px-4 py-2 text-xs font-mono select-none">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 items-center">
+        {/* Metric 1: Log Level Donut & Pie */}
+        <div className="flex items-center gap-2.5 bg-white px-2.5 py-1.5 rounded-md border border-zinc-200/80 shadow-2xs">
+          <div className="relative w-9 h-9 shrink-0 flex items-center justify-center">
+            <svg className="w-9 h-9 -rotate-90" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="15" fill="transparent" stroke="#f4f4f5" strokeWidth="3" />
+              {segments.map((seg, idx) => (
+                <circle
+                  key={idx}
+                  cx="18"
+                  cy="18"
+                  r="15"
+                  fill="transparent"
+                  stroke={seg.color}
+                  strokeWidth="3"
+                  strokeDasharray={`${seg.len} ${c}`}
+                  strokeDashoffset={seg.offset}
+                />
+              ))}
+            </svg>
+            <span className="absolute text-[9px] font-bold text-zinc-700">
+              {total > 999 ? `${(total / 1000).toFixed(1)}k` : total}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] text-zinc-400 uppercase tracking-wider flex items-center justify-between font-semibold">
+              <span>Level Split</span>
+              <span className="text-zinc-600">{total} logs</span>
+            </div>
+            <div className="flex items-center gap-1.5 mt-0.5 text-[10px] truncate">
+              <span className="text-sky-600 font-medium">info {infoPct}%</span>
+              {warnCount > 0 && <span className="text-amber-600 font-medium">warn {warnPct}%</span>}
+              {errorCount > 0 && <span className="text-rose-600 font-semibold">err {errorPct}%</span>}
+            </div>
+          </div>
+        </div>
+
+        {/* Metric 2: Activity Sparkline Bars */}
+        <div className="bg-white px-2.5 py-1.5 rounded-md border border-zinc-200/80 shadow-2xs flex flex-col justify-between h-[48px]">
+          <div className="flex items-center justify-between text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">
+            <span>Throughput Graph</span>
+            <span className="text-emerald-600 flex items-center gap-1 font-sans text-[10px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Live
+            </span>
+          </div>
+          <div className="flex items-end gap-0.5 h-4 w-full">
+            {buckets.map((b, idx) => {
+              const heightPct = Math.max(20, Math.min(100, Math.round((b.total / maxBucket) * 100)));
+              return (
+                <div
+                  key={idx}
+                  title={`${b.total} logs${b.hasError ? ' (error)' : ''}`}
+                  style={{ height: `${heightPct}%` }}
+                  className={cn(
+                    "flex-1 rounded-2xs transition-all",
+                    b.hasError
+                      ? "bg-rose-500"
+                      : b.total > 0
+                      ? "bg-zinc-300 hover:bg-zinc-400"
+                      : "bg-zinc-100"
+                  )}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Metric 3: Error Rate & Health KPI */}
+        <div className="bg-white px-2.5 py-1.5 rounded-md border border-zinc-200/80 shadow-2xs flex items-center justify-between h-[48px]">
+          <div>
+            <div className="text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">Error Rate</div>
+            <div className="flex items-baseline gap-1.5 mt-0.5">
+              <span className={cn(
+                "text-sm font-bold",
+                Number(errorPct) > 5 ? "text-rose-600" : Number(errorPct) > 0 ? "text-amber-600" : "text-emerald-600"
+              )}>
+                {errorPct}%
+              </span>
+              <span className="text-[10px] text-zinc-400">
+                ({errorCount} failed)
+              </span>
+            </div>
+          </div>
+          <div className={cn(
+            "w-7 h-7 rounded-full flex items-center justify-center shrink-0 border",
+            Number(errorPct) === 0
+              ? "bg-emerald-50 border-emerald-200 text-emerald-600"
+              : Number(errorPct) < 5
+              ? "bg-amber-50 border-amber-200 text-amber-600"
+              : "bg-rose-50 border-rose-200 text-rose-600"
+          )}>
+            <Activity className="w-3.5 h-3.5" />
+          </div>
+        </div>
+
+        {/* Metric 4: Top Events Horizontal Bars */}
+        <div className="bg-white px-2.5 py-1.5 rounded-md border border-zinc-200/80 shadow-2xs flex flex-col justify-between h-[48px]">
+          <div className="text-[10px] text-zinc-400 uppercase tracking-wider font-semibold flex justify-between">
+            <span>Top Events</span>
+            <span className="text-zinc-500">{topEvents.length} types</span>
+          </div>
+          <div className="space-y-1 mt-0.5">
+            {topEvents.map(([ev, count]) => {
+              const pct = Math.round((count / total) * 100);
+              return (
+                <div key={ev} className="flex items-center gap-1.5 text-[10px]">
+                  <span className="truncate w-20 text-zinc-600 font-medium" title={ev}>{ev}</span>
+                  <div className="flex-1 bg-zinc-100 rounded-full h-1 overflow-hidden">
+                    <div className="bg-sky-500 h-full rounded-full" style={{ width: `${pct}%` }}></div>
+                  </div>
+                  <span className="text-zinc-400 tabular-nums w-7 text-right">{pct}%</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+

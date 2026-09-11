@@ -46,6 +46,17 @@ async function startServer() {
     res.sendFile(path.join(process.cwd(), 'website', 'index.html'));
   });
 
+  // Serve robots.txt and sitemap.xml
+  app.get('/robots.txt', (req, res) => {
+    res.type('text/plain');
+    res.sendFile(path.join(process.cwd(), 'public', 'robots.txt'));
+  });
+
+  app.get('/sitemap.xml', (req, res) => {
+    res.type('application/xml');
+    res.sendFile(path.join(process.cwd(), 'public', 'sitemap.xml'));
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
