@@ -219,6 +219,7 @@ export default function App() {
   const isWrite = currentUserRole === 'write';
 
   const curlExample = activeProject ? `curl -X POST http://localhost:3000/v1/logs \\
+  -H "Authorization: Bearer cl_live_********************************" \\
   -H "Content-Type: application/json" \\
   -d '{
     "project": "${activeProject.name}",

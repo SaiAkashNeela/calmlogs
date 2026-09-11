@@ -23,6 +23,11 @@ export interface LogEvent {
   metadata?: any;
 }
 
+async function sha256Hex(str: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 export class RealtimeLogStream extends DurableObject {
   private buffer: LogEvent[] = [];
   private currentSegmentSize: number = 0;
@@ -55,8 +60,14 @@ export class RealtimeLogStream extends DurableObject {
     
     if (url.pathname === '/ingest' && request.method === 'POST') {
       try {
-        const payload: LogEvent = await request.json();
-        await this.handleIncomingLog(payload);
+        const payload: any = await request.json();
+        if (Array.isArray(payload)) {
+          for (const item of payload) {
+            await this.handleIncomingLog(item);
+          }
+        } else {
+          await this.handleIncomingLog(payload);
+        }
         return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
       } catch (err: any) {
         return new Response(JSON.stringify({ error: err.message }), { status: 400 });
@@ -87,6 +98,20 @@ export class RealtimeLogStream extends DurableObject {
         await this.ctx.storage.setAlarm(Date.now() + 10000); 
       }
     }
+  }
+
+  async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
+    try {
+      const text = typeof message === 'string' ? message : new TextDecoder().decode(message);
+      const data = JSON.parse(text);
+      if (Array.isArray(data)) {
+        for (const item of data) {
+          await this.handleIncomingLog(item);
+        }
+      } else if (data && typeof data === 'object') {
+        await this.handleIncomingLog(data);
+      }
+    } catch (e) {}
   }
 
   async alarm() {
@@ -278,9 +303,20 @@ export default {
 
         const servId = `serv_${Date.now()}`;
         const now = new Date().toISOString();
-        await env.DB.prepare(`INSERT INTO services (id, project_id, name, type, created_at, updated_at, last_seen_at) VALUES (?, ?, ?, ?, ?, ?, ?)`)
-          .bind(servId, projectId, name, type || 'api', now, now, now).run();
-        return addCors(new Response(JSON.stringify({ id: servId, project_id: projectId, name }), { headers: { 'Content-Type': 'application/json' } }));
+        const rawApiKey = `cl_live_${crypto.randomUUID().replace(/-/g, '')}`;
+        const keyHash = await sha256Hex(rawApiKey);
+
+        await env.DB.prepare(
+          `INSERT INTO services (id, project_id, name, type, created_at, updated_at, last_seen_at, ingestion_key_hash) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        ).bind(servId, projectId, name, type || 'api', now, now, now, keyHash).run();
+
+        return addCors(new Response(JSON.stringify({ 
+          id: servId, 
+          project_id: projectId, 
+          name,
+          apiKey: rawApiKey
+        }), { headers: { 'Content-Type': 'application/json' } }));
       }
       if (request.method === 'DELETE') {
         const activeOrgId = session?.session?.activeOrganizationId;
@@ -347,84 +383,126 @@ export default {
        return addCors(new Response(JSON.stringify(logs), { headers: { 'Content-Type': 'application/json' } }));
     }
 
-    // Ingestion API (Service to platform - can be authenticated via API keys or open for local dev)
+    // Ingestion API (Service to platform - supports single LogEvent or batch LogEvent[])
     if (url.pathname === '/v1/logs' && request.method === 'POST') {
       try {
-        const body: LogEvent = await request.json();
-        const rawProj = typeof body.project === 'string' ? body.project.trim() : '';
-        const rawServ = typeof body.service === 'string' ? body.service.trim() : '';
+        const rawBody: any = await request.json();
+        const logsArray: any[] = Array.isArray(rawBody) ? rawBody : [rawBody];
         
-        if (!rawProj || !rawServ) {
-          return addCors(new Response(JSON.stringify({ error: "Missing project or service" }), { status: 400 }));
+        if (logsArray.length === 0) {
+          return addCors(new Response(JSON.stringify({ error: "Empty logs payload" }), { status: 400 }));
         }
 
         const now = new Date().toISOString();
 
-        // 1. Resolve project: lookup by exact id OR case-insensitive name
-        let project = await env.DB.prepare(
-          `SELECT id, organization_id, name FROM projects WHERE id = ? OR LOWER(name) = LOWER(?) LIMIT 1`
-        ).bind(rawProj, rawProj).first<{ id: string; organization_id: string; name: string }>();
-
-        let projId = project?.id;
-        let orgId = project?.organization_id;
-
-        if (!project) {
-          // If no existing project matched, attach to active org or fallback to default workspace
-          orgId = session?.session?.activeOrganizationId || 'org_default';
-          projId = rawProj.toLowerCase().startsWith('proj_') ? rawProj : `proj_${Date.now()}`;
+        // Group by project and service
+        const groups = new Map<string, { rawProj: string; rawServ: string; items: any[] }>();
+        for (const item of logsArray) {
+          const rawProj = typeof item.project === 'string' ? item.project.trim() : '';
+          const rawServ = typeof item.service === 'string' ? item.service.trim() : '';
+          if (!rawProj || !rawServ) continue;
           
-          await env.DB.prepare(`INSERT INTO organization (id, name, createdAt) VALUES (?, ?, ?) ON CONFLICT(id) DO NOTHING`)
-            .bind(orgId, 'Default Workspace', now).run();
-
-          await env.DB.prepare(`INSERT INTO projects (id, organization_id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING`)
-            .bind(projId, orgId, rawProj, 'Auto-registered project', now, now).run();
-          project = { id: projId, organization_id: orgId, name: rawProj };
+          const key = `${rawProj}:::${rawServ}`;
+          if (!groups.has(key)) {
+            groups.set(key, { rawProj, rawServ, items: [] });
+          }
+          groups.get(key)!.items.push(item);
         }
 
-        // 2. Resolve service: lookup under this project by exact id OR case-insensitive name
-        let service = await env.DB.prepare(
-          `SELECT id, name FROM services WHERE project_id = ? AND (id = ? OR LOWER(name) = LOWER(?)) LIMIT 1`
-        ).bind(projId, rawServ, rawServ).first<{ id: string; name: string }>();
-
-        let servId = service?.id;
-
-        if (!service) {
-          servId = rawServ.toLowerCase().startsWith('serv_') ? rawServ : `serv_${Date.now()}`;
-          await env.DB.prepare(
-            `INSERT INTO services (id, project_id, name, type, created_at, updated_at, last_seen_at) 
-             VALUES (?, ?, ?, ?, ?, ?, ?) 
-             ON CONFLICT(id) DO UPDATE SET last_seen_at = excluded.last_seen_at`
-          ).bind(servId, projId, rawServ, 'api', now, now, now).run();
-          service = { id: servId, name: rawServ };
-        } else {
-          await env.DB.prepare(`UPDATE services SET last_seen_at = ?, updated_at = ? WHERE id = ?`)
-            .bind(now, now, servId).run();
+        if (groups.size === 0) {
+          return addCors(new Response(JSON.stringify({ error: "Missing project or service in log events" }), { status: 400 }));
         }
 
-        // 3. Preserve human-readable project and service names and attach canonical IDs
-        const projectName = project?.name || rawProj;
-        const serviceName = service?.name || rawServ;
+        let totalIngested = 0;
+        let lastProjId = '';
+        let lastServId = '';
 
-        const enrichedLog: LogEvent = {
-          ...body,
-          project: projectName,
-          service: serviceName,
-          project_id: projId!,
-          service_id: servId!,
-          timestamp: body.timestamp || now
-        };
+        for (const [, group] of groups) {
+          const { rawProj, rawServ, items } = group;
 
-        const doId = env.REALTIME.idFromName(`${projId}:${servId}`);
-        const stub = env.REALTIME.get(doId);
-        
-        const doReq = new Request(new URL('/ingest', request.url), {
-          method: 'POST',
-          body: JSON.stringify(enrichedLog),
-          headers: { 'Content-Type': 'application/json' }
-        });
-        
-        await stub.fetch(doReq);
-        return addCors(new Response(JSON.stringify({ success: true, project_id: projId, service_id: servId }), {
+          // 1. Resolve project
+          let project = await env.DB.prepare(
+            `SELECT id, organization_id, name FROM projects WHERE id = ? OR LOWER(name) = LOWER(?) LIMIT 1`
+          ).bind(rawProj, rawProj).first<{ id: string; organization_id: string; name: string }>();
+
+          let projId = project?.id;
+          let orgId = project?.organization_id;
+
+          if (!project) {
+            orgId = session?.session?.activeOrganizationId || 'org_default';
+            projId = rawProj.toLowerCase().startsWith('proj_') ? rawProj : `proj_${Date.now()}`;
+            
+            await env.DB.prepare(`INSERT INTO organization (id, name, createdAt) VALUES (?, ?, ?) ON CONFLICT(id) DO NOTHING`)
+              .bind(orgId, 'Default Workspace', now).run();
+
+            await env.DB.prepare(`INSERT INTO projects (id, organization_id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING`)
+              .bind(projId, orgId, rawProj, 'Auto-registered project', now, now).run();
+            project = { id: projId, organization_id: orgId, name: rawProj };
+          }
+
+          // 2. Resolve service
+          let service = await env.DB.prepare(
+            `SELECT id, name, ingestion_key_hash FROM services WHERE project_id = ? AND (id = ? OR LOWER(name) = LOWER(?)) LIMIT 1`
+          ).bind(projId, rawServ, rawServ).first<{ id: string; name: string; ingestion_key_hash?: string | null }>();
+
+          let servId = service?.id;
+
+          if (!service) {
+            servId = rawServ.toLowerCase().startsWith('serv_') ? rawServ : `serv_${Date.now()}`;
+            await env.DB.prepare(
+              `INSERT INTO services (id, project_id, name, type, created_at, updated_at, last_seen_at) 
+               VALUES (?, ?, ?, ?, ?, ?, ?) 
+               ON CONFLICT(id) DO UPDATE SET last_seen_at = excluded.last_seen_at`
+            ).bind(servId, projId, rawServ, 'api', now, now, now).run();
+            service = { id: servId, name: rawServ, ingestion_key_hash: null };
+          } else {
+            // Validate API key if configured
+            if (service.ingestion_key_hash) {
+              const authHeader = request.headers.get("Authorization") || request.headers.get("X-API-Key") || "";
+              const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : authHeader.trim();
+              const tokenHash = token ? await sha256Hex(token) : "";
+              if (!token || tokenHash !== service.ingestion_key_hash) {
+                return addCors(new Response(JSON.stringify({ 
+                  error: `Unauthorized: Invalid or missing API key for service '${service.name}'` 
+                }), {
+                  status: 401,
+                  headers: { 'Content-Type': 'application/json' }
+                }));
+              }
+            }
+
+            await env.DB.prepare(`UPDATE services SET last_seen_at = ?, updated_at = ? WHERE id = ?`)
+              .bind(now, now, servId).run();
+          }
+
+          const projectName = project?.name || rawProj;
+          const serviceName = service?.name || rawServ;
+
+          const enrichedLogs: LogEvent[] = items.map(item => ({
+            ...item,
+            project: projectName,
+            service: serviceName,
+            project_id: projId!,
+            service_id: servId!,
+            timestamp: item.timestamp || now
+          }));
+
+          const doId = env.REALTIME.idFromName(`${projId}:${servId}`);
+          const stub = env.REALTIME.get(doId);
+          
+          const doReq = new Request(new URL('/ingest', request.url), {
+            method: 'POST',
+            body: JSON.stringify(enrichedLogs),
+            headers: { 'Content-Type': 'application/json' }
+          });
+          
+          await stub.fetch(doReq);
+          totalIngested += enrichedLogs.length;
+          lastProjId = projId!;
+          lastServId = servId!;
+        }
+
+        return addCors(new Response(JSON.stringify({ success: true, count: totalIngested, project_id: lastProjId, service_id: lastServId }), {
           headers: { 'Content-Type': 'application/json' }
         }));
       } catch (e: any) {
