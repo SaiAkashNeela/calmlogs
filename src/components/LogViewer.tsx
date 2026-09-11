@@ -11,10 +11,12 @@ import {
   Pause,
   Play,
   Trash2,
+  Brush,
   Download,
   ArrowDown,
   Activity,
 } from 'lucide-react';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -29,9 +31,18 @@ interface LogViewerProps {
   serviceId: string;
   projectName?: string;
   serviceName?: string;
+  isWrite?: boolean;
+  onServiceDeleted?: (serviceId: string) => void;
 }
 
-export default function LogViewer({ projectId, serviceId, projectName, serviceName }: LogViewerProps) {
+export default function LogViewer({
+  projectId,
+  serviceId,
+  projectName,
+  serviceName,
+  isWrite = true,
+  onServiceDeleted
+}: LogViewerProps) {
   const [logs, setLogs] = useState<LogEvent[]>([]);
   const [connectionState, setConnectionState] = useState<ConnectionState>('CONNECTING');
   const [isPaused, setIsPaused] = useState(false);
@@ -40,6 +51,7 @@ export default function LogViewer({ projectId, serviceId, projectName, serviceNa
   const [searchQuery, setSearchQuery] = useState('');
   const [activeLevels, setActiveLevels] = useState<Set<LogLevel>>(new Set(['debug', 'info', 'warn', 'error']));
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showDeleteServiceModal, setShowDeleteServiceModal] = useState(false);
   
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<any>(null);
@@ -181,6 +193,17 @@ export default function LogViewer({ projectId, serviceId, projectName, serviceNa
     setSelectedLog(null);
   };
 
+  const handleDeleteService = async () => {
+    try {
+      const res = await fetch(`/api/services?id=${serviceId}`, { method: 'DELETE' });
+      if (res.ok && onServiceDeleted) {
+        onServiceDeleted(serviceId);
+      }
+    } catch (e) {
+      console.error("Failed to delete service", e);
+    }
+  };
+
   return (
     <div className="flex flex-1 h-full overflow-hidden bg-white text-zinc-900 selection:bg-zinc-200">
       {/* Main Console Area */}
@@ -242,31 +265,8 @@ export default function LogViewer({ projectId, serviceId, projectName, serviceNa
             </div>
           </div>
 
-          {/* Action buttons & Search */}
+          {/* Action buttons */}
           <div className="flex items-center gap-2">
-            {/* Search Input */}
-            <div className="relative flex items-center">
-              <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 pointer-events-none" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Filter stream... (/)"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="pl-8 pr-7 py-1 text-xs font-mono bg-zinc-50 border border-zinc-200 rounded-md text-zinc-900 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400/20 w-44 sm:w-60 transition-all"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2 text-zinc-400 hover:text-zinc-600 p-0.5"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-            </div>
-
-            <div className="h-4 w-px bg-zinc-200 mx-1 hidden sm:block" />
-
             {/* Pause/Resume button */}
             <button
               onClick={() => setIsPaused(!isPaused)}
@@ -281,13 +281,13 @@ export default function LogViewer({ projectId, serviceId, projectName, serviceNa
               {isPaused ? <Play className="w-3.5 h-3.5 text-amber-700" /> : <Pause className="w-3.5 h-3.5" />}
             </button>
 
-            {/* Clear logs with confirmation */}
+            {/* Clear logs with brush icon */}
             {showClearConfirm ? (
-              <div className="flex items-center gap-1.5 px-2 py-1 bg-rose-50 border border-rose-200 rounded-md text-[11px] font-mono animate-in fade-in duration-100">
-                <span className="text-rose-700 font-medium">Clear {logs.length} logs?</span>
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 border border-amber-200 rounded-md text-[11px] font-mono animate-in fade-in duration-100">
+                <span className="text-amber-800 font-medium">Clear {logs.length} logs?</span>
                 <button
                   onClick={handleClear}
-                  className="px-1.5 py-0.5 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-medium transition-colors"
+                  className="px-1.5 py-0.5 bg-amber-600 hover:bg-amber-700 text-white rounded text-[10px] font-medium transition-colors"
                 >
                   Clear
                 </button>
@@ -305,9 +305,9 @@ export default function LogViewer({ projectId, serviceId, projectName, serviceNa
                 }}
                 disabled={logs.length === 0}
                 title="Clear current log buffer"
-                className="p-1.5 rounded-md bg-white border border-zinc-200 text-zinc-600 hover:text-rose-600 hover:bg-rose-50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                className="p-1.5 rounded-md bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Brush className="w-3.5 h-3.5" />
               </button>
             )}
 
@@ -319,6 +319,56 @@ export default function LogViewer({ projectId, serviceId, projectName, serviceNa
             >
               <Download className="w-3.5 h-3.5" />
             </button>
+
+            {/* Delete Service Button in Top Right */}
+            {isWrite && (
+              <>
+                <div className="h-4 w-px bg-zinc-200 mx-0.5" />
+                <button
+                  onClick={() => setShowDeleteServiceModal(true)}
+                  title={`Delete service ${serviceName || serviceId}`}
+                  className="p-1.5 rounded-md bg-white border border-zinc-200 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Dedicated Query / Search Bar Below */}
+        <div className="h-10 px-4 flex items-center justify-between border-b border-zinc-200 bg-[#fbfbfa] shrink-0 font-mono text-xs">
+          <div className="relative flex-1 flex items-center max-w-xl">
+            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 pointer-events-none" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Query logs (filter by message, event, request/trace ID)...  press '/' to focus"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-8 py-1 text-xs font-mono bg-white border border-zinc-200 rounded-md text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400/20 transition-all shadow-2xs"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                title="Clear query"
+                className="absolute right-2 text-zinc-400 hover:text-zinc-700 p-0.5"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 text-[11px] text-zinc-500 shrink-0 ml-3">
+            {searchQuery ? (
+              <span className="bg-zinc-200/80 text-zinc-700 px-2 py-0.5 rounded text-[10px] font-medium">
+                {filteredLogs.length} of {logs.length} matching
+              </span>
+            ) : (
+              <span className="text-zinc-400 text-[10px]">
+                {logs.length} buffered
+              </span>
+            )}
           </div>
         </div>
 
@@ -524,6 +574,16 @@ export default function LogViewer({ projectId, serviceId, projectName, serviceNa
           </div>
         </div>
       )}
+
+      {/* Delete Service Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={showDeleteServiceModal}
+        title="Delete Service"
+        itemName={serviceName || serviceId}
+        description="All indexed logs for this service will be permanently deleted."
+        onConfirm={handleDeleteService}
+        onClose={() => setShowDeleteServiceModal(false)}
+      />
     </div>
   );
 }

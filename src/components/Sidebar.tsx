@@ -167,18 +167,18 @@ export default function Sidebar({
                         </h3>
                       </div>
                       {isWrite && (
-                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-0.5 shrink-0">
                           <button
                             onClick={() => setServiceModalTarget(project)}
                             title={`Add service to ${project.name}`}
-                            className="p-0.5 rounded text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 transition-all"
+                            className="p-1 rounded text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 transition-all"
                           >
                             <Plus className="w-3 h-3" />
                           </button>
                           <button
                             onClick={() => setDeleteTarget({ type: 'project', id: project.id, name: project.name })}
                             title={`Delete project ${project.name}`}
-                            className="p-0.5 rounded text-zinc-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                            className="p-1 rounded text-zinc-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
@@ -207,18 +207,6 @@ export default function Sidebar({
                               <span className="truncate flex-1">{service.name}</span>
                               {isActive && <ChevronRight className="w-3 h-3 text-zinc-400 shrink-0" />}
                             </button>
-                            {isWrite && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeleteTarget({ type: 'service', id: service.id, name: service.name });
-                                }}
-                                title={`Delete service ${service.name}`}
-                                className="opacity-0 group-hover/svc:opacity-100 p-1 rounded text-zinc-400 hover:text-rose-600 hover:bg-rose-50 transition-all ml-1 shrink-0"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            )}
                           </li>
                         );
                       })}

@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "bin": {
+    "calmlogs": "./bin/calmlogs.js"
+  },
   "scripts": {
     "dev": "npm run wrangler:dev & tsx server.ts",
     "wrangler:dev": "npx --yes kill-port 8787 && wrangler dev --port 8787",
