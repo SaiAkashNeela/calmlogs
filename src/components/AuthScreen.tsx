@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { authClient } from '../lib/auth-client';
-import { Activity, Loader2 } from 'lucide-react';
+import { Activity, Loader2, ShieldCheck } from 'lucide-react';
 
+/* Hallmark · component: AuthScreen · genre: modern-minimal · theme: Workbench Light
+ * states: default · hover · focus · active · disabled · loading · error · success
+ * contrast: pass (46–50)
+ */
 export default function AuthScreen({ onLogin }: { onLogin: () => void }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,42 +19,43 @@ export default function AuthScreen({ onLogin }: { onLogin: () => void }) {
         callbackURL: window.location.origin
       });
     } catch (e: any) {
-      setError(e.message || "Google sign in failed");
+      setError(e.message || "Google authentication failed. Check credentials.");
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-sm border border-zinc-100">
-        <div className="flex flex-col items-center">
-          <div className="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center mb-6 shadow-sm">
-            <Activity className="w-6 h-6 text-white" />
-          </div>
-          <h2 className="text-center text-3xl font-bold tracking-tight text-zinc-900">
-            Sign in to CalmLogs
-          </h2>
-          <p className="mt-2 text-center text-sm text-zinc-500">
-            Realtime observability & distributed log streaming
+    <div className="min-h-screen flex items-center justify-center bg-[#fbfbfa] text-zinc-900 py-12 px-4 sm:px-6 lg:px-8 selection:bg-zinc-200">
+      <div className="max-w-md w-full space-y-6 bg-white p-8 rounded-2xl border border-zinc-200 shadow-xl shadow-zinc-200/50">
+        
+        {/* Brand Lockup */}
+        <div className="flex flex-col items-center text-center">
+          <img src="/logo.png" alt="CalmLogs" className="w-14 h-14 object-contain rounded-2xl mb-4 shadow-sm" />
+          <h1 className="text-2xl font-bold font-sans tracking-tight text-zinc-900">
+            CalmLogs Console
+          </h1>
+          <p className="mt-1.5 text-xs text-zinc-500 font-mono">
+            High-density telemetry & distributed log streaming
           </p>
         </div>
 
         {error && (
-          <div className="text-sm text-rose-600 bg-rose-50 p-3 rounded-lg border border-rose-100">
+          <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700 font-mono">
             {error}
           </div>
         )}
 
-        <div className="mt-6 space-y-4">
+        {/* Primary Google Auth */}
+        <div className="space-y-4 pt-2">
           <button
             type="button"
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-zinc-800 shadow-sm ring-1 ring-inset ring-zinc-300 hover:bg-zinc-50 hover:ring-zinc-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-3 rounded-xl bg-white hover:bg-zinc-50 active:translate-y-[1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 border border-zinc-300 text-zinc-900 px-4 py-3 text-sm font-sans font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
           >
             {loading ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin text-zinc-600" />
+                <Loader2 className="h-4 w-4 animate-spin text-zinc-900" />
                 <span>Redirecting to Google...</span>
               </>
             ) : (
@@ -67,9 +72,11 @@ export default function AuthScreen({ onLogin }: { onLogin: () => void }) {
           </button>
         </div>
 
-        <p className="text-center text-xs text-zinc-400">
-          Sign in or create an account with your Google identity.
-        </p>
+        {/* Security badge */}
+        <div className="pt-4 border-t border-zinc-100 flex items-center justify-center gap-2 text-[11px] font-mono text-zinc-500">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+          <span>OAuth 2.0 secured · Zero password storage</span>
+        </div>
       </div>
     </div>
   );

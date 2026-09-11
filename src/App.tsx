@@ -9,10 +9,14 @@ import CreateServiceModal from './components/CreateServiceModal';
 import { authClient } from './lib/auth-client';
 import { Activity, LogOut, Plus, FolderPlus, Terminal, Copy, Check, Send } from 'lucide-react';
 
+/* Hallmark · macrostructure: 05-workbench · genre: modern-minimal · theme: Workbench Light */
 export default function App() {
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeOrgId, setActiveOrgId] = useState<string | null>(null);
+  const [activeOrgName, setActiveOrgName] = useState<string>('');
+  const [currentUserRole, setCurrentUserRole] = useState<'read' | 'write'>('write');
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -25,12 +29,31 @@ export default function App() {
   const [copied, setCopied] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
 
+  // Check and accept any pending invitation from URL
+  const handlePendingInviteUrl = async (userSession: any) => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const invitationId = urlParams.get('invitation_id');
+    if (invitationId && userSession) {
+      try {
+        await authClient.organization.acceptInvitation({ invitationId });
+        window.history.replaceState({}, '', window.location.pathname);
+      } catch (e) {
+        console.error('Failed to accept invitation:', e);
+      }
+    }
+  };
+
   const checkSession = async () => {
     try {
       const res = await authClient.getSession({ query: {} } as any);
       setSession(res.data?.session);
-      if (res.data?.session?.activeOrganizationId) {
-        setActiveOrgId(res.data.session.activeOrganizationId);
+      setCurrentUser(res.data?.user);
+
+      if (res.data?.session) {
+        await handlePendingInviteUrl(res.data.session);
+        if (res.data.session.activeOrganizationId) {
+          setActiveOrgId(res.data.session.activeOrganizationId);
+        }
       }
     } catch(e) {}
     setLoading(false);
@@ -39,6 +62,20 @@ export default function App() {
   useEffect(() => {
     checkSession();
   }, []);
+
+  // Fetch full organization details to determine current user role and org name
+  useEffect(() => {
+    if (activeOrgId && currentUser) {
+      authClient.organization.getFullOrganization({ query: {} } as any).then((res: any) => {
+        if (res.data) {
+          setActiveOrgName(res.data.name || '');
+          const myMember = res.data.members?.find((m: any) => m.userId === currentUser.id);
+          const role = myMember?.role === 'read' ? 'read' : 'write';
+          setCurrentUserRole(role);
+        }
+      }).catch(() => {});
+    }
+  }, [activeOrgId, currentUser]);
 
   const loadProjects = useCallback(async () => {
     if (!activeOrgId) return [];
@@ -77,7 +114,7 @@ export default function App() {
     }
   }, [activeOrgId, loadProjects, loadServices]);
 
-  // When active project changes, update default active service if needed
+  // Sync active service when active project changes
   useEffect(() => {
     if (activeProjectId) {
       const projServices = services.filter(s => s.project_id === activeProjectId);
@@ -113,17 +150,19 @@ export default function App() {
           project: projName,
           service: serviceName,
           level: 'info',
-          event: 'system.welcome',
-          message: `CalmLogs initialized for ${projName}/${serviceName}`,
+          event: 'system.boot',
+          message: `Test log received for ${projName}/${serviceName}`,
           timestamp: new Date().toISOString(),
-          metadata: { env: 'development', host: 'localhost' }
+          metadata: { env: 'production', status: 200 }
         })
       });
 
       const updatedServices = await loadServices();
-      const createdServ = updatedServices.find((s: any) => s.project_id === activeProjectId && s.name === serviceName);
-      if (createdServ) {
-        setActiveServiceId(createdServ.id);
+      const targetService = updatedServices.find(
+        (s: any) => s.project_id === activeProjectId && (s.name === serviceName || s.id === serviceName)
+      );
+      if (targetService) {
+        setActiveServiceId(targetService.id);
       }
     } catch (e) {
       console.error(e);
@@ -132,7 +171,14 @@ export default function App() {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-zinc-50 flex items-center justify-center text-zinc-500">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#fbfbfa] flex items-center justify-center text-zinc-500 font-mono text-xs">
+        <Activity className="w-4 h-4 animate-spin text-zinc-400 mr-2" />
+        <span>Loading CalmLogs...</span>
+      </div>
+    );
+  }
 
   if (!session) {
     return <AuthScreen onLogin={checkSession} />;
@@ -144,6 +190,7 @@ export default function App() {
 
   const activeProject = projects.find(p => p.id === activeProjectId);
   const activeProjectServices = activeProjectId ? services.filter(s => s.project_id === activeProjectId) : [];
+  const isWrite = currentUserRole === 'write';
 
   const curlExample = activeProject ? `curl -X POST http://localhost:3000/v1/logs \\
   -H "Content-Type: application/json" \\
@@ -151,99 +198,103 @@ export default function App() {
     "project": "${activeProject.name}",
     "service": "api",
     "level": "info",
-    "event": "user.login",
-    "message": "User authenticated successfully"
+    "event": "user.authenticated",
+    "message": "User session validated",
+    "metadata": { "status": 200 }
   }'` : '';
 
   return (
-    <div className="flex h-screen bg-[#FDFCFB] text-zinc-900 font-sans antialiased overflow-hidden selection:bg-zinc-200">
-      <div className="flex flex-col border-r border-zinc-200/60 bg-[#FDFCFB]">
-        <Sidebar 
-          projects={projects} 
-          services={services} 
-          activeProjectId={activeProjectId}
-          activeServiceId={activeServiceId}
-          onSelectService={(pId, sId) => {
-            setActiveProjectId(pId);
-            setActiveServiceId(sId);
-          }}
-          onProjectCreated={handleProjectCreated}
-          onServiceCreated={handleServiceCreated}
-        />
-        <div className="p-4 mt-auto border-t border-zinc-200/60">
-          <button 
-            onClick={async () => {
-              await authClient.signOut({} as any);
-              window.location.reload();
-            }}
-            className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-900 w-full px-2 py-1.5 transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </button>
-        </div>
-      </div>
+    <div className="flex h-screen bg-[#fbfbfa] text-zinc-900 font-sans antialiased overflow-hidden selection:bg-zinc-200">
+      {/* Sidebar Rail */}
+      <Sidebar 
+        projects={projects} 
+        services={services} 
+        activeProjectId={activeProjectId}
+        activeServiceId={activeServiceId}
+        currentUser={currentUser}
+        currentUserRole={currentUserRole}
+        activeOrgId={activeOrgId}
+        activeOrgName={activeOrgName}
+        onSelectService={(pId, sId) => {
+          setActiveProjectId(pId);
+          setActiveServiceId(sId);
+        }}
+        onProjectCreated={handleProjectCreated}
+        onServiceCreated={handleServiceCreated}
+        onSwitchWorkspace={() => setActiveOrgId(null)}
+      />
       
-      <main className="flex-1 flex flex-col min-w-0 bg-white">
+      {/* Main Viewport */}
+      <main className="flex-1 flex flex-col min-w-0 bg-[#fbfbfa]">
         {activeProjectId && activeServiceId ? (
           <LogViewer projectId={activeProjectId} serviceId={activeServiceId} />
         ) : projects.length === 0 ? (
-          /* Empty state: No projects created yet */
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-zinc-50/50">
-            <div className="w-16 h-16 rounded-2xl bg-zinc-900 flex items-center justify-center text-white mb-6 shadow-sm">
-              <FolderPlus className="w-8 h-8" />
-            </div>
-            <h2 className="text-2xl font-bold tracking-tight text-zinc-900 mb-2">
+          /* Empty Workspace State */
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[#fbfbfa]">
+            <img src="/logo.png" alt="CalmLogs" className="w-14 h-14 object-contain rounded-2xl mb-5 shadow-sm" />
+            <h2 className="text-xl font-bold font-sans tracking-tight text-zinc-900 mb-2">
               Welcome to CalmLogs
             </h2>
-            <p className="text-sm text-zinc-500 max-w-md mb-8">
-              Start monitoring your systems with real-time log streaming. Create your first project to organize your microservices and APIs.
+            <p className="text-xs text-zinc-500 font-mono max-w-sm mb-6 leading-relaxed">
+              Stream logs live from your applications and services. Create a project to organize your services and start sending logs.
             </p>
-            <button
-              onClick={() => setShowCreateProject(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-semibold transition-all shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              Create Your First Project
-            </button>
+            {isWrite ? (
+              <button
+                onClick={() => setShowCreateProject(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-sans text-xs font-semibold transition-all shadow-sm active:translate-y-[1px]"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Create Project</span>
+              </button>
+            ) : (
+              <div className="p-3 bg-zinc-100 rounded-lg text-zinc-600 text-xs font-mono">
+                You have read-only access. An editor can create projects in this workspace.
+              </div>
+            )}
           </div>
         ) : activeProject && activeProjectServices.length === 0 ? (
-          /* Empty state: Project exists but has no services */
-          <div className="flex-1 flex flex-col items-center justify-center p-8 max-w-2xl mx-auto text-center">
-            <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-700 mb-4 border border-zinc-200">
-              <Activity className="w-6 h-6" />
+          /* Project with No Services */
+          <div className="flex-1 flex flex-col items-center justify-center p-8 max-w-2xl mx-auto text-center font-mono">
+            <div className="w-12 h-12 rounded-xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-800 mb-4 shadow-sm">
+              <Terminal className="w-5 h-5 text-sky-600" />
             </div>
-            <h2 className="text-xl font-bold tracking-tight text-zinc-900 mb-1">
+            <h2 className="text-lg font-bold font-sans tracking-tight text-zinc-900 mb-1">
               Project: {activeProject.name}
             </h2>
-            <p className="text-sm text-zinc-500 mb-6">
-              No services found in this project yet. Add a service or ingest your first log to start streaming.
+            <p className="text-xs text-zinc-500 mb-6 font-mono">
+              Ready for logs. Send your first event via HTTP or add a service.
             </p>
 
-            <div className="flex items-center gap-3 mb-8">
-              <button
-                onClick={() => setServiceModalTarget(activeProject)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800 transition-colors shadow-xs"
-              >
-                <Plus className="w-4 h-4" />
-                Add Service
-              </button>
-              <button
-                onClick={() => handleSendTestLog(activeProject.name, "api")}
-                disabled={sendingTest}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-zinc-200 text-zinc-800 text-sm font-medium hover:bg-zinc-50 hover:border-zinc-300 transition-all shadow-xs disabled:opacity-50"
-              >
-                <Send className="w-4 h-4 text-emerald-600" />
-                {sendingTest ? "Sending Log..." : "Send Test Log"}
-              </button>
-            </div>
+            {isWrite ? (
+              <div className="flex items-center gap-3 mb-8">
+                <button
+                  onClick={() => setServiceModalTarget(activeProject)}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-zinc-900 text-white text-xs font-sans font-semibold hover:bg-zinc-800 transition-colors shadow-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add Service
+                </button>
+                <button
+                  onClick={() => handleSendTestLog(activeProject.name, "api")}
+                  disabled={sendingTest}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white border border-zinc-200 text-zinc-800 text-xs font-mono hover:bg-zinc-50 hover:text-zinc-950 transition-all shadow-xs disabled:opacity-50"
+                >
+                  <Send className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{sendingTest ? "Sending Log..." : "Send Test Log"}</span>
+                </button>
+              </div>
+            ) : (
+              <div className="mb-6 p-2.5 bg-zinc-100 rounded-lg text-zinc-600 text-xs font-mono">
+                Read-only access. You can view logs when services are active.
+              </div>
+            )}
 
-            {/* Quick Ingestion Guide */}
-            <div className="w-full text-left bg-zinc-900 text-zinc-100 rounded-xl p-4 shadow-sm border border-zinc-800 font-mono text-xs">
-              <div className="flex items-center justify-between pb-3 mb-3 border-b border-zinc-800">
-                <div className="flex items-center gap-2 text-zinc-400">
-                  <Terminal className="w-3.5 h-3.5" />
-                  <span>Send logs via HTTP</span>
+            {/* Quick HTTP Ingestion Snippet */}
+            <div className="w-full text-left bg-white text-zinc-900 rounded-xl p-4 shadow-sm border border-zinc-200 text-xs">
+              <div className="flex items-center justify-between pb-3 mb-3 border-b border-zinc-100">
+                <div className="flex items-center gap-2 text-zinc-600">
+                  <Terminal className="w-3.5 h-3.5 text-zinc-500" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider font-mono">Send logs via HTTP POST</span>
                 </div>
                 <button
                   onClick={() => {
@@ -251,21 +302,21 @@ export default function App() {
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);
                   }}
-                  className="flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors"
+                  className="flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition-colors text-[11px] font-mono border border-zinc-200"
                 >
-                  {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                  <span>{copied ? "Copied" : "Copy"}</span>
+                  {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                  <span>{copied ? "Copied" : "Copy cURL"}</span>
                 </button>
               </div>
-              <pre className="overflow-x-auto whitespace-pre leading-relaxed text-zinc-300">
+              <pre className="overflow-x-auto whitespace-pre leading-relaxed text-zinc-700 font-mono text-[11px] bg-zinc-50 p-3 rounded-lg border border-zinc-200">
                 {curlExample}
               </pre>
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-zinc-400">
-            <Activity className="w-12 h-12 mb-4 opacity-20" />
-            <p className="text-sm">Select a service from the sidebar to view live logs</p>
+          <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 font-mono text-xs">
+            <Activity className="w-8 h-8 mb-3 opacity-30" />
+            <p>Select a service from the sidebar to view logs</p>
           </div>
         )}
       </main>
@@ -288,4 +339,3 @@ export default function App() {
     </div>
   );
 }
-

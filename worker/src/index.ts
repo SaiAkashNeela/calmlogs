@@ -43,6 +43,13 @@ export class RealtimeLogStream extends DurableObject {
       }
       const { 0: client, 1: server } = new WebSocketPair();
       this.ctx.acceptWebSocket(server);
+      
+      // Replay recent in-memory logs to newly connected client
+      for (const log of this.buffer.slice(-50)) {
+        try {
+          server.send(JSON.stringify(log));
+        } catch (e) {}
+      }
       return new Response(null, { status: 101, webSocket: client });
     }
     
@@ -163,6 +170,18 @@ export default {
       return addCors(new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }));
     }
 
+    if (url.pathname === '/api/user/delete' && request.method === 'POST') {
+      const userId = (session as any)?.user?.id || session?.session?.userId;
+      if (!userId) return addCors(new Response("Unauthorized", { status: 401 }));
+
+      await env.DB.prepare(`DELETE FROM session WHERE userId = ?`).bind(userId).run();
+      await env.DB.prepare(`DELETE FROM account WHERE userId = ?`).bind(userId).run();
+      await env.DB.prepare(`DELETE FROM member WHERE userId = ?`).bind(userId).run();
+      await env.DB.prepare(`DELETE FROM user WHERE id = ?`).bind(userId).run();
+
+      return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }));
+    }
+
     if (url.pathname.startsWith('/api/projects')) {
       if (request.method === 'GET') {
         const activeOrgId = session?.session?.activeOrganizationId;
@@ -174,6 +193,17 @@ export default {
       if (request.method === 'POST') {
         const activeOrgId = session?.session?.activeOrganizationId;
         if (!activeOrgId) return addCors(new Response("Requires active organization", { status: 400 }));
+
+        const userId = session?.user?.id;
+        const memberRow = await env.DB.prepare(
+          `SELECT role FROM member WHERE organizationId = ? AND userId = ?`
+        ).bind(activeOrgId, userId).first<{ role: string }>();
+        if (memberRow?.role === 'read') {
+          return addCors(new Response(JSON.stringify({ error: "Read-only access: you cannot create resources" }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' }
+          }));
+        }
 
         const body: any = await request.json();
         const id = `proj_${Date.now()}`;
@@ -187,8 +217,6 @@ export default {
     if (url.pathname.startsWith('/api/services')) {
       if (request.method === 'GET') {
         const projectId = url.searchParams.get('project_id');
-        // If projectId is given, we should verify it belongs to the active org
-        // For brevity in this MVP, we query services for projects in the active org
         const activeOrgId = session?.session?.activeOrganizationId;
         if (!activeOrgId) return addCors(new Response(JSON.stringify([]), { headers: { 'Content-Type': 'application/json' } }));
 
@@ -205,6 +233,17 @@ export default {
       if (request.method === 'POST') {
         const activeOrgId = session?.session?.activeOrganizationId;
         if (!activeOrgId) return addCors(new Response("Requires active organization", { status: 400 }));
+
+        const userId = session?.user?.id;
+        const memberRow = await env.DB.prepare(
+          `SELECT role FROM member WHERE organizationId = ? AND userId = ?`
+        ).bind(activeOrgId, userId).first<{ role: string }>();
+        if (memberRow?.role === 'read') {
+          return addCors(new Response(JSON.stringify({ error: "Read-only access: you cannot create resources" }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' }
+          }));
+        }
 
         const body: any = await request.json();
         const { projectId, name, type } = body;
@@ -258,49 +297,81 @@ export default {
        return addCors(new Response(JSON.stringify(logs), { headers: { 'Content-Type': 'application/json' } }));
     }
 
-    // Ingestion API (Service to platform - not authenticated by Better Auth)
+    // Ingestion API (Service to platform - can be authenticated via API keys or open for local dev)
     if (url.pathname === '/v1/logs' && request.method === 'POST') {
       try {
         const body: LogEvent = await request.json();
+        const rawProj = typeof body.project === 'string' ? body.project.trim() : '';
+        const rawServ = typeof body.service === 'string' ? body.service.trim() : '';
         
-        // Ensure project & service exist. 
-        // In a real system, the ingestion API key would identify the service.
-        // For this demo, we'll auto-create if it doesn't exist?
-        // Actually, if we're enforcing multi-tenant, we shouldn't auto-create without an org context.
-        // But the previous implementation allowed it. To keep seed.ts working, we'll allow it and attach to a default org, or fail.
-        // Let's check for an ingestion key or bypass for local dev.
-        // Since seed.ts doesn't send keys, we'll just allow it for now.
-        
-        const projId = typeof body.project === 'string' ? body.project.trim().toLowerCase() : '';
-        const servId = typeof body.service === 'string' ? body.service.trim().toLowerCase() : '';
-        
-        if (!projId || !servId) return addCors(new Response("Missing project or service", { status: 400 }));
+        if (!rawProj || !rawServ) {
+          return addCors(new Response(JSON.stringify({ error: "Missing project or service" }), { status: 400 }));
+        }
 
-        // Upsert logic requires an organization. We will use a dummy org 'org_default' for auto-created ones via ingestion.
-        const defaultOrg = 'org_default';
         const now = new Date().toISOString();
-        
-        await env.DB.prepare(`INSERT INTO organization (id, name, createdAt) VALUES (?, ?, ?) ON CONFLICT(id) DO NOTHING`).bind(defaultOrg, 'Default Org', now).run();
-        
-        await env.DB.prepare(`INSERT INTO projects (id, organization_id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING`)
-          .bind(projId, defaultOrg, body.project, '', now, now).run();
-        
-        await env.DB.prepare(`INSERT INTO services (id, project_id, name, created_at, updated_at, last_seen_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET last_seen_at = excluded.last_seen_at`)
-          .bind(servId, projId, body.service, now, now, now).run();
+
+        // 1. Resolve project: lookup by exact id OR case-insensitive name
+        let project = await env.DB.prepare(
+          `SELECT id, organization_id, name FROM projects WHERE id = ? OR LOWER(name) = LOWER(?) LIMIT 1`
+        ).bind(rawProj, rawProj).first<{ id: string; organization_id: string; name: string }>();
+
+        let projId = project?.id;
+        let orgId = project?.organization_id;
+
+        if (!project) {
+          // If no existing project matched, attach to active org or fallback to default workspace
+          orgId = session?.session?.activeOrganizationId || 'org_default';
+          projId = rawProj.toLowerCase().startsWith('proj_') ? rawProj : `proj_${Date.now()}`;
+          
+          await env.DB.prepare(`INSERT INTO organization (id, name, createdAt) VALUES (?, ?, ?) ON CONFLICT(id) DO NOTHING`)
+            .bind(orgId, 'Default Workspace', now).run();
+
+          await env.DB.prepare(`INSERT INTO projects (id, organization_id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING`)
+            .bind(projId, orgId, rawProj, 'Auto-registered project', now, now).run();
+        }
+
+        // 2. Resolve service: lookup under this project by exact id OR case-insensitive name
+        let service = await env.DB.prepare(
+          `SELECT id, name FROM services WHERE project_id = ? AND (id = ? OR LOWER(name) = LOWER(?)) LIMIT 1`
+        ).bind(projId, rawServ, rawServ).first<{ id: string; name: string }>();
+
+        let servId = service?.id;
+
+        if (!service) {
+          servId = rawServ.toLowerCase().startsWith('serv_') ? rawServ : `serv_${Date.now()}`;
+          await env.DB.prepare(
+            `INSERT INTO services (id, project_id, name, type, created_at, updated_at, last_seen_at) 
+             VALUES (?, ?, ?, ?, ?, ?, ?) 
+             ON CONFLICT(id) DO UPDATE SET last_seen_at = excluded.last_seen_at`
+          ).bind(servId, projId, rawServ, 'api', now, now, now).run();
+        } else {
+          await env.DB.prepare(`UPDATE services SET last_seen_at = ?, updated_at = ? WHERE id = ?`)
+            .bind(now, now, servId).run();
+        }
+
+        // 3. Enrich log with canonical IDs so Durable Object indexes properly
+        const enrichedLog: LogEvent = {
+          ...body,
+          project: projId!,
+          service: servId!,
+          timestamp: body.timestamp || now
+        };
 
         const doId = env.REALTIME.idFromName(`${projId}:${servId}`);
         const stub = env.REALTIME.get(doId);
         
         const doReq = new Request(new URL('/ingest', request.url), {
           method: 'POST',
-          body: JSON.stringify(body),
+          body: JSON.stringify(enrichedLog),
           headers: { 'Content-Type': 'application/json' }
         });
         
         await stub.fetch(doReq);
-        return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }));
+        return addCors(new Response(JSON.stringify({ success: true, project_id: projId, service_id: servId }), {
+          headers: { 'Content-Type': 'application/json' }
+        }));
       } catch (e: any) {
-         return addCors(new Response(JSON.stringify({ error: e.message }), { status: 500 }));
+        return addCors(new Response(JSON.stringify({ error: e.message }), { status: 500 }));
       }
     }
     
