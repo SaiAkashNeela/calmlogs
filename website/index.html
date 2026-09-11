@@ -32,8 +32,9 @@
   <meta name="twitter:image" content="https://calmlogs.com/og-image.png" />
 
   <!-- Favicon & Icons -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2318181b'/%3E%3Cpath d='M8 12h16M8 16h10M8 20h13' stroke='%2334d399' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E" />
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2318181b'/%3E%3Cpath d='M8 12h16M8 16h10M8 20h13' stroke='%2334d399' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="logo.png" />
+  <link rel="apple-touch-icon" href="logo.png" />
   <meta name="theme-color" content="#ffffff" />
 
   <!-- Fonts: Inter & JetBrains Mono -->
@@ -181,7 +182,7 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 7px;
       font-weight: 700;
       font-size: 15px;
       letter-spacing: -0.02em;
@@ -262,16 +263,33 @@
     .badge {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
       gap: 6px;
-      padding: 4px 12px;
+      padding: 5px 14px;
       background: var(--accent-subtle);
       border: 1px solid var(--accent-border);
       border-radius: 9999px;
-      font-size: 11px;
+      font-size: clamp(10.5px, 2.8vw, 11px);
       font-weight: 600;
       color: #065f46;
       font-family: var(--font-mono);
       margin-bottom: 24px;
+      max-width: 100%;
+      text-align: center;
+      line-height: 1.4;
+      box-sizing: border-box;
+    }
+
+    .badge-dot {
+      color: #10b981;
+      font-size: 9px;
+      display: inline-flex;
+    }
+
+    .badge-sep {
+      color: #059669;
+      opacity: 0.6;
     }
 
     .hero h1 {
@@ -635,6 +653,107 @@
       border: 1px solid #27272a;
     }
 
+    /* Docker Compose Section */
+    .compose-section {
+      padding: 72px 0;
+      background: #f4f4f5;
+      border-top: 1px solid var(--border);
+    }
+
+    .compose-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+      gap: 48px;
+      align-items: center;
+    }
+
+    .compose-content {
+      min-width: 0;
+    }
+
+    .compose-content h2 {
+      font-size: clamp(24px, 3.5vw, 32px);
+      margin-bottom: 16px;
+      line-height: 1.25;
+      letter-spacing: -0.025em;
+    }
+
+    .compose-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 13.5px;
+      color: var(--text-main);
+      margin-top: 20px;
+    }
+
+    .compose-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.5;
+    }
+
+    .compose-list svg {
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+
+    .compose-code-card {
+      background: #09090b;
+      border: 1px solid #27272a;
+      border-radius: var(--radius-md);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .compose-code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      background: #18181b;
+      border-bottom: 1px solid #27272a;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #a1a1aa;
+    }
+
+    .compose-file-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+
+    .compose-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+      display: inline-block;
+    }
+
+    .compose-code-body {
+      padding: 18px 20px;
+      margin: 0;
+      color: #e4e4e7;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.65;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      white-space: pre;
+    }
+
+    .syn-kw { color: #60a5fa; }
+    .syn-str { color: #34d399; }
+    .syn-comm { color: #71717a; font-style: italic; }
+
     /* Comparison Section */
     .comparison-section {
       padding: 60px 0;
@@ -679,102 +798,141 @@
       color: #065f46;
     }
 
-    /* Cloudflare Free Tier Section */
+    /* Cloudflare Free Tier Horizontal Bar Chart Showcase */
     .cf-free-section {
-      padding: 70px 0;
+      padding: 72px 0;
       background: #ffffff;
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
     }
 
-    .cf-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    .cf-chart-panel {
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
       gap: 20px;
     }
 
-    .cf-card {
-      background: var(--bg);
+    .cf-bar-item {
+      background: #ffffff;
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
-      padding: 22px;
+      padding: 20px 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      gap: 12px;
       transition: all 0.2s ease;
     }
 
-    .cf-card:hover {
+    .cf-bar-item:hover {
       border-color: var(--border-strong);
-      transform: translateY(-2px);
       box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
     }
 
-    .cf-card-header {
+    .cf-bar-meta {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .cf-bar-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .cf-pill {
       display: inline-block;
       font-size: 10px;
       font-family: var(--font-mono);
-      font-weight: 600;
-      color: var(--text-muted);
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      margin-bottom: 4px;
-    }
-
-    .cf-card h3 {
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .cf-price {
-      font-size: 12px;
-      font-family: var(--font-mono);
-      font-weight: 700;
-      color: #10b981;
-      background: var(--accent-subtle);
-      border: 1px solid var(--accent-border);
       padding: 2px 8px;
       border-radius: 999px;
-      white-space: nowrap;
     }
 
-    .cf-desc {
-      font-size: 12.5px;
-      color: var(--text-muted);
-      line-height: 1.5;
-      margin-bottom: 16px;
-      flex: 1;
+    .cf-bar-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-main);
     }
 
-    .cf-bar-wrapper {
-      height: 6px;
+    .cf-bar-tags {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .cf-cap-badge {
+      font-size: 12px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: #047857;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      padding: 2px 9px;
+      border-radius: 999px;
+    }
+
+    .cf-quota-badge {
+      font-size: 12px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: #374151;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      padding: 2px 9px;
+      border-radius: 999px;
+    }
+
+    .cf-bar-track {
+      position: relative;
+      height: 26px;
       background: #e4e4e7;
-      border-radius: 999px;
+      border-radius: 8px;
       overflow: hidden;
-      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
     }
 
-    .cf-bar {
+    .cf-bar-fill {
       height: 100%;
-      border-radius: 999px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      transition: width 0.4s ease;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
     }
 
-    .cf-stats {
+    .cf-bar-foot {
       display: flex;
       justify-content: space-between;
-      font-size: 11px;
+      align-items: center;
+      font-size: 11.5px;
       font-family: var(--font-mono);
       color: var(--text-muted);
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
-    .cf-stats strong {
+    .cf-bar-foot strong {
       color: var(--text-main);
     }
 
@@ -811,9 +969,10 @@
     footer {
       border-top: 1px solid var(--border);
       background: #ffffff;
-      padding: 60px 0 40px;
+      padding: 48px 0 28px;
       font-size: 12px;
       color: var(--text-muted);
+      margin-bottom: 0;
     }
 
     .footer-grid {
@@ -874,22 +1033,74 @@
 
     /* Mobile & Tablet Adaptations */
     @media (max-width: 768px) {
-      .hero { padding: 48px 0 36px; }
+      .container { padding: 0 16px; }
+      .hero { padding: 40px 0 28px; }
       .nav-links { display: none; }
       .nav-actions { display: none; }
       .mobile-menu-btn { display: inline-flex; }
-      .hero-cta-group { flex-direction: column; gap: 16px; }
-      .command-bar-animated { width: 100%; justify-content: space-between; }
-      .cmd-ticker-window { min-width: 0; flex: 1; font-size: 12px; }
-      .footer-grid { grid-template-columns: 1fr; gap: 28px; }
-      .grid-3 { grid-template-columns: 1fr; }
-      .free-tier-cards { grid-template-columns: 1fr !important; }
+      .hero-cta-group { flex-direction: column; gap: 14px; width: 100%; }
+      .hero-runner-wrapper { width: 100%; max-width: 100%; }
+      .command-bar-animated { width: 100%; box-sizing: border-box; justify-content: space-between; }
+      .cmd-ticker-window { min-width: 0; flex: 1; font-size: 11.5px; }
+      .footer-grid { grid-template-columns: 1fr; gap: 24px; margin-bottom: 28px; }
+      .footer-bottom { flex-direction: column; align-items: flex-start; gap: 10px; padding-top: 18px; }
+      footer { padding: 36px 0 24px; }
+      .grid-3 { grid-template-columns: 1fr; gap: 16px; }
+      .compose-section { padding: 48px 0; }
+      .compose-grid { grid-template-columns: 1fr; gap: 24px; }
+      .compose-code-body { font-size: 11px; padding: 14px 16px; line-height: 1.55; }
+      .cf-chart-panel { padding: 18px 14px; gap: 14px; }
+      .cf-bar-item { padding: 14px 12px; gap: 10px; }
+      .cf-bar-meta { flex-direction: column; align-items: flex-start; gap: 6px; }
+      .cf-bar-tags { width: 100%; justify-content: space-between; }
+      .cf-bar-track { height: 22px; }
+      .cf-bar-fill { font-size: 10px; padding: 0 8px; }
+      .cf-bar-foot { flex-direction: column; align-items: flex-start; gap: 4px; }
+      .faq-grid { grid-template-columns: 1fr; gap: 16px; }
       .terminal-tabs { overflow-x: auto; max-width: 100%; padding-bottom: 2px; }
+      .showcase { margin: 16px auto 48px; }
+    }
+
+    @media (max-width: 480px) {
+      .badge {
+        font-size: 10px;
+        padding: 5px 10px;
+        gap: 4px 6px;
+        border-radius: 999px;
+        max-width: 100%;
+        line-height: 1.35;
+      }
+      .badge-dot {
+        font-size: 8px;
+      }
+      .stack-pills {
+        justify-content: center;
+        width: 100%;
+      }
+      .stack-pill {
+        padding: 2px 7px;
+        font-size: 10px;
+      }
+      .command-bar-animated {
+        padding: 6px 10px;
+        gap: 8px;
+        font-size: 11px;
+      }
+      .cmd-ticker-item {
+        font-size: 11px;
+      }
+      .copy-btn {
+        padding: 3px 8px;
+        font-size: 10px;
+      }
+      .compose-section { padding: 36px 0; }
+      .compose-code-header { padding: 8px 12px; }
+      .compose-code-body { font-size: 10.5px; padding: 12px 14px; }
     }
 
     @media (min-width: 769px) and (max-width: 1024px) {
-      .free-tier-cards { grid-template-columns: repeat(2, 1fr) !important; }
       .grid-3 { grid-template-columns: repeat(2, 1fr); }
+      .compose-grid { grid-template-columns: 1fr; }
       .hero-cta-group { flex-direction: column; }
     }
   </style>
@@ -955,7 +1166,10 @@
   <section class="hero">
     <div class="container">
       <div class="badge">
-        <span>●</span> Open Source & Edge-Native &bull; $0 Cloudflare Free Tier
+        <span class="badge-dot">●</span>
+        <span>Open Source &amp; Edge-Native</span>
+        <span class="badge-sep">&bull;</span>
+        <span>$0 Cloudflare Free Tier</span>
       </div>
       <h1>Log everything without changing your code.</h1>
       <p class="hero-sub">
@@ -1065,7 +1279,7 @@
           <div class="code-box">node server.js | npx calmlogs</div>
         </div>
 
-        <div class="card" id="compose">
+        <div class="card">
           <div class="card-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
           </div>
@@ -1087,149 +1301,157 @@
   </section>
 
   <!-- Docker Compose Highlight -->
-  <section style="padding: 60px 0; background: #f4f4f5; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <section class="compose-section" id="compose">
     <div class="container">
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 40px; align-items: center;">
-        <div>
+      <div class="compose-grid">
+        <div class="compose-content">
           <div class="badge" style="background: #e0e7ff; border-color: #c7d2fe; color: #3730a3;">Docker Compose Stack</div>
-          <h2 style="font-size: 28px; margin-bottom: 16px;">Drop 1 service into your compose file.</h2>
+          <h2>Drop 1 service into your compose file.</h2>
           <p style="color: var(--text-muted); font-size: 14.5px; line-height: 1.6; margin-bottom: 20px;">
             CalmLogs automatically parses container tags (like <code>postgres-1 | ...</code> and <code>redis-1 | ...</code>) and registers each service dynamically in the dashboard.
           </p>
-          <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 13px; color: var(--text-main);">
-            <li style="display: flex; align-items: center; gap: 8px;">
+          <ul class="compose-list">
+            <li>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              No need to build custom Docker images or install agents
+              <span>No need to build custom Docker images or install agents</span>
             </li>
-            <li style="display: flex; align-items: center; gap: 8px;">
+            <li>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              Filter by specific Docker network or log the entire file
+              <span>Filter by specific Docker network or capture all services</span>
             </li>
-            <li style="display: flex; align-items: center; gap: 8px;">
+            <li>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              Cleans container prefixes so log messages stay readable
+              <span>Cleans container prefixes so log messages stay readable</span>
             </li>
           </ul>
         </div>
 
-        <div style="background: #09090b; border: 1px solid #27272a; border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-md);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-family: var(--font-mono); font-size: 11px; color: #a1a1aa;">
-            <span>docker-compose.yml</span>
-            <button class="copy-btn" onclick="copyComposeSnippet(this)">Copy YAML</button>
+        <div class="compose-code-card">
+          <div class="compose-code-header">
+            <div class="compose-file-info">
+              <span class="compose-dot"></span>
+              <span>docker-compose.yml</span>
+            </div>
+            <button class="copy-btn" onclick="copyComposeSnippet(this)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <span>Copy YAML</span>
+            </button>
           </div>
-          <pre style="color: #e4e4e7; font-family: var(--font-mono); font-size: 11px; line-height: 1.6; overflow-x: auto;"><code>services:
-  # Add to your compose file:
-  calmlogs:
-    image: node:alpine
-    container_name: calmlogs-forwarder
-    restart: unless-stopped
-    volumes:
+          <pre class="compose-code-body"><code><span class="syn-kw">services</span>:
+  <span class="syn-str">calmlogs</span>:
+    <span class="syn-kw">image</span>: node:alpine
+    <span class="syn-kw">container_name</span>: calmlogs-forwarder
+    <span class="syn-kw">restart</span>: unless-stopped
+    <span class="syn-kw">volumes</span>:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: >
-      sh -c "apk add --no-cache docker-cli docker-cli-compose &&
-      docker compose logs -f --no-color | npx -y calmlogs --project 'prod-stack'"</code></pre>
+    <span class="syn-comm"># networks: [backend_net]  # Included if specified, or captures all services</span>
+    <span class="syn-kw">command</span>: &gt;
+      sh -c "apk add --no-cache docker-cli docker-cli-compose &amp;&amp;
+      docker compose logs -f --no-color | npx -y calmlogs --project '&lt;project&gt;' --key '&lt;key&gt;'"</code></pre>
         </div>
       </div>
     </div>
+  </section>
+
   <!-- Cloudflare Free Tier Section -->
   <section class="cf-free-section" id="free-tier">
     <div class="container">
       <div class="section-head">
         <div class="badge" style="background: #eff6ff; border-color: #bfdbfe; color: #1e40af;">Official Cloudflare Free Limits</div>
-        <h2>Run 100% Free on Cloudflare</h2>
-        <p>CalmLogs is engineered specifically around Cloudflare's permanent free allowance. Stream and store millions of logs for $0.00/month.</p>
+        <h2>Run Free on Cloudflare Infrastructure</h2>
+        <p>CalmLogs is engineered specifically around Cloudflare's permanent free allowance. Stream and store millions of logs with zero monthly infrastructure bills.</p>
       </div>
 
-      <div class="cf-grid">
-        <!-- Card 1: R2 Storage -->
-        <div class="cf-card">
-          <div>
-            <div class="cf-card-header">
-              <div class="cf-title">
-                <span class="cf-pill">Cloudflare R2</span>
-                <h3>10 GB Cold Storage</h3>
-              </div>
-              <span class="cf-price">$0 / mo</span>
+      <div class="cf-chart-panel">
+        <!-- Horizontal Bar Row 1: R2 Cold Storage -->
+        <div class="cf-bar-item">
+          <div class="cf-bar-meta">
+            <div class="cf-bar-title-wrap">
+              <span class="cf-pill" style="color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0;">Cloudflare R2</span>
+              <span class="cf-bar-title">10 GB Storage Allowance</span>
             </div>
-            <p class="cf-desc">Compressed JSONL segments stored indefinitely. Zero egress fees, zero bandwidth charges.</p>
-          </div>
-          <div>
-            <div class="cf-bar-wrapper">
-              <div class="cf-bar" style="width: 100%; background: #10b981;"></div>
-            </div>
-            <div class="cf-stats">
-              <span>Included: <strong>10 GB / month</strong></span>
-              <span>Capacity: <strong>~100M logs</strong></span>
+            <div class="cf-bar-tags">
+              <span class="cf-cap-badge">~100M Logs Capacity</span>
+              <span class="cf-quota-badge">10 GB Monthly</span>
             </div>
           </div>
-        </div>
-
-        <!-- Card 2: Workers Edge -->
-        <div class="cf-card">
-          <div>
-            <div class="cf-card-header">
-              <div class="cf-title">
-                <span class="cf-pill">Cloudflare Workers</span>
-                <h3>100k Requests / Day</h3>
-              </div>
-              <span class="cf-price">$0 / mo</span>
+          <div class="cf-bar-track">
+            <div class="cf-bar-fill" style="width: 95%; background: linear-gradient(90deg, #10b981, #059669);">
+              Compressed JSONL Archives &bull; 95% Startup Volume
             </div>
-            <p class="cf-desc">Ingestion API and WebSocket pub/sub live fan-out across 200+ global edge locations.</p>
           </div>
-          <div>
-            <div class="cf-bar-wrapper">
-              <div class="cf-bar" style="width: 100%; background: #3b82f6;"></div>
-            </div>
-            <div class="cf-stats">
-              <span>Included: <strong>3,000,000 reqs/mo</strong></span>
-              <span>Capacity: <strong>~5M logs/day</strong></span>
-            </div>
+          <div class="cf-bar-foot">
+            <span>Included Quota: <strong>10 GB Storage</strong> &bull; 1M Writes / Month</span>
+            <span>Egress: <strong>Free Worldwide Bandwidth</strong></span>
           </div>
         </div>
 
-        <!-- Card 3: D1 SQLite -->
-        <div class="cf-card">
-          <div>
-            <div class="cf-card-header">
-              <div class="cf-title">
-                <span class="cf-pill">Cloudflare D1 (SQLite)</span>
-                <h3>5 GB Database</h3>
-              </div>
-              <span class="cf-price">$0 / mo</span>
+        <!-- Horizontal Bar Row 2: Workers Edge Compute -->
+        <div class="cf-bar-item">
+          <div class="cf-bar-meta">
+            <div class="cf-bar-title-wrap">
+              <span class="cf-pill" style="color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe;">Cloudflare Workers</span>
+              <span class="cf-bar-title">100,000 Daily Requests</span>
             </div>
-            <p class="cf-desc">Edge relational SQLite for BetterAuth sessions, team RBAC, catalogs, and segment indices.</p>
+            <div class="cf-bar-tags">
+              <span class="cf-cap-badge">~5M Logs / Day (Batched)</span>
+              <span class="cf-quota-badge">3,000,000 / Month</span>
+            </div>
           </div>
-          <div>
-            <div class="cf-bar-wrapper">
-              <div class="cf-bar" style="width: 100%; background: #8b5cf6;"></div>
+          <div class="cf-bar-track">
+            <div class="cf-bar-fill" style="width: 88%; background: linear-gradient(90deg, #3b82f6, #1d4ed8);">
+              Global Edge Ingest &bull; WebSocket Live-Tail
             </div>
-            <div class="cf-stats">
-              <span>Reads: <strong>5,000,000 / day</strong></span>
-              <span>Writes: <strong>100,000 / day</strong></span>
-            </div>
+          </div>
+          <div class="cf-bar-foot">
+            <span>Included Quota: <strong>100,000 Ingestion Reqs / Day</strong></span>
+            <span>Latency: <strong>&lt;15ms Worldwide (275+ PoPs)</strong></span>
           </div>
         </div>
 
-        <!-- Card 4: Bandwidth -->
-        <div class="cf-card">
-          <div>
-            <div class="cf-card-header">
-              <div class="cf-title">
-                <span class="cf-pill">Network Bandwidth</span>
-                <h3>Zero Egress Fees</h3>
-              </div>
-              <span class="cf-price">$0 forever</span>
+        <!-- Horizontal Bar Row 3: D1 SQLite Database -->
+        <div class="cf-bar-item">
+          <div class="cf-bar-meta">
+            <div class="cf-bar-title-wrap">
+              <span class="cf-pill" style="color: #7c3aed; background: #f5f3ff; border: 1px solid #ddd6fe;">Cloudflare D1</span>
+              <span class="cf-bar-title">5 GB Serverless Database</span>
             </div>
-            <p class="cf-desc">Unlike AWS S3 or GCP which penalize you per gigabyte transferred, Cloudflare has $0 egress fees.</p>
+            <div class="cf-bar-tags">
+              <span class="cf-cap-badge">Millions of Index Rows</span>
+              <span class="cf-quota-badge">5M Reads / Day</span>
+            </div>
           </div>
-          <div>
-            <div class="cf-bar-wrapper">
-              <div class="cf-bar" style="width: 100%; background: #f59e0b;"></div>
+          <div class="cf-bar-track">
+            <div class="cf-bar-fill" style="width: 82%; background: linear-gradient(90deg, #8b5cf6, #6d28d9);">
+              5M Daily Reads &bull; 100k Daily Writes
             </div>
-            <div class="cf-stats">
-              <span>Download Egress: <strong>$0.00 / GB</strong></span>
-              <span>Global CDN: <strong>Included</strong></span>
+          </div>
+          <div class="cf-bar-foot">
+            <span>Included Quota: <strong>5 GB SQLite Database</strong> &bull; 5M Reads / Day</span>
+            <span>Metadata: <strong>BetterAuth Workspaces &amp; Catalogs</strong></span>
+          </div>
+        </div>
+
+        <!-- Horizontal Bar Row 4: Bandwidth & Global Egress -->
+        <div class="cf-bar-item">
+          <div class="cf-bar-meta">
+            <div class="cf-bar-title-wrap">
+              <span class="cf-pill" style="color: #b45309; background: #fffbeb; border: 1px solid #fde68a;">Network Bandwidth</span>
+              <span class="cf-bar-title">Unlimited Free Egress</span>
             </div>
+            <div class="cf-bar-tags">
+              <span class="cf-cap-badge">Zero Bandwidth Penalty</span>
+              <span class="cf-quota-badge">Uncapped Transfer</span>
+            </div>
+          </div>
+          <div class="cf-bar-track">
+            <div class="cf-bar-fill" style="width: 100%; background: linear-gradient(90deg, #f59e0b, #b45309);">
+              Unrestricted Egress Bandwidth &bull; Compare to AWS S3 ($0.09/GB)
+            </div>
+          </div>
+          <div class="cf-bar-foot">
+            <span>Included Quota: <strong>Unlimited Edge CDN Egress</strong></span>
+            <span>Lock-In: <strong>None</strong></span>
           </div>
         </div>
       </div>
@@ -1449,10 +1671,12 @@
     }
 
     function copyComposeSnippet(btn) {
-      const yaml = `services:\n  calmlogs:\n    image: node:alpine\n    container_name: calmlogs-forwarder\n    restart: unless-stopped\n    volumes:\n      - /var/run/docker.sock:/var/run/docker.sock\n    command: >\n      sh -c "apk add --no-cache docker-cli docker-cli-compose &&\n      docker compose logs -f --no-color | npx -y calmlogs --project 'prod-stack'"`;
+      const yaml = `services:\n  calmlogs:\n    image: node:alpine\n    container_name: calmlogs-forwarder\n    restart: unless-stopped\n    volumes:\n      - /var/run/docker.sock:/var/run/docker.sock\n    # networks: [backend_net]  # Included if specified, or captures all services\n    command: >\n      sh -c "apk add --no-cache docker-cli docker-cli-compose &&\n      docker compose logs -f --no-color | npx -y calmlogs --project '<project>' --key '<key>'"`;
       navigator.clipboard.writeText(yaml);
-      btn.innerText = 'Copied!';
-      setTimeout(() => { btn.innerText = 'Copy YAML'; }, 2000);
+      const span = btn.querySelector('span') || btn;
+      const orig = span.innerText;
+      span.innerText = 'Copied!';
+      setTimeout(() => { span.innerText = orig; }, 2000);
     }
 
     function switchTab(svc, btn) {

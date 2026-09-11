@@ -240,7 +240,7 @@ export default function MembersModal({
                     <path d="M12.0004 24.0001C15.2404 24.0001 17.9654 22.935 19.9454 21.095L16.0804 18.095C15.0054 18.82 13.6204 19.245 12.0004 19.245C8.8704 19.245 6.21537 17.135 5.26537 14.29L1.27539 17.385C3.25539 21.31 7.3104 24.0001 12.0004 24.0001Z" fill="#34A853" />
                   </svg>
                   <span>
-                    Note: The recipient will need a <strong>Google Account</strong> or <strong>Google Workspace account</strong> (@company.com) to sign in.
+                    Note: The recipient will need a <strong>Google Account</strong> or <strong>Google Workspace account</strong> (@company.com) to sign in, as CalmLogs only supports login/signup via Google.
                   </span>
                 </div>
               </form>

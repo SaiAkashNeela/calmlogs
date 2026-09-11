@@ -36,15 +36,15 @@ async function startServer() {
   });
 
   // Serve documentation portal and landing website
-  app.use('/docs', express.static(path.join(process.cwd(), 'docs')));
-  app.get('/docs', (req, res) => {
+  app.get(['/docs', '/docs/'], (req, res) => {
     res.sendFile(path.join(process.cwd(), 'docs', 'index.html'));
   });
+  app.use('/docs', express.static(path.join(process.cwd(), 'docs')));
 
-  app.use('/website', express.static(path.join(process.cwd(), 'website')));
-  app.get('/website', (req, res) => {
+  app.get(['/website', '/website/'], (req, res) => {
     res.sendFile(path.join(process.cwd(), 'website', 'index.html'));
   });
+  app.use('/website', express.static(path.join(process.cwd(), 'website')));
 
   // Serve robots.txt and sitemap.xml
   app.get('/robots.txt', (req, res) => {
