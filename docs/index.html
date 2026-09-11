@@ -603,7 +603,7 @@
         <ul>
           <li><strong>No SDK Bloat:</strong> Works seamlessly with standard Unix pipes or container stdout streams.</li>
           <li><strong>Docker Compose Native:</strong> Drop 1 forwarder service into your compose file to automatically map all containers into separate service tabs.</li>
-          <li><strong>$0 Cloudflare Free Tier:</strong> Designed to run completely free within Cloudflare Workers, R2, and D1 SQLite permanent free quotas.</li>
+          <li><strong>Cloudflare Permanent Free Tier:</strong> Designed to run completely free within Cloudflare Workers, R2, and D1 SQLite permanent free quotas.</li>
           <li><strong>Edge WebSocket Tail:</strong> Cloudflare Durable Objects broadcast logs globally in real time with sub-100ms latency.</li>
         </ul>
       </section>
@@ -884,13 +884,18 @@ cargo run --release | npx calmlogs --project <span class="syn-str">"trading"</sp
                 <td><strong>~5,000,000 logs / day</strong> with CLI batching</td>
               </tr>
               <tr>
+                <td><strong>Cloudflare Durable Objects</strong></td>
+                <td>1,000,000 requests / month, 400,000 GB-s</td>
+                <td>Sub-100ms real-time WebSocket pub/sub live tail</td>
+              </tr>
+              <tr>
                 <td><strong>Cloudflare D1 (SQLite)</strong></td>
                 <td>5 GB storage, 5M reads / 100k writes per day</td>
                 <td>Millions of segment & user index rows</td>
               </tr>
               <tr>
                 <td><strong>Egress Bandwidth</strong></td>
-                <td>100% Free ($0.00 / GB)</td>
+                <td>100% Free (Zero bandwidth fees)</td>
                 <td>Zero data transfer charges forever</td>
               </tr>
             </tbody>
@@ -975,6 +980,10 @@ cargo run --release | npx calmlogs --project <span class="syn-str">"trading"</sp
           <a href="https://deploy.workers.cloudflare.com/?url=https://github.com/SaiAkashNeela/calmlogs" target="_blank" rel="noopener">
             <img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare Workers" style="height: 36px;" />
           </a>
+        </p>
+
+        <p style="font-size: 13px; color: var(--text-muted); background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px 16px; border-radius: 8px; line-height: 1.5; margin-bottom: 20px;">
+          <strong>Automatic Infrastructure Provisioning:</strong> Cloudflare automatically creates your <strong>R2 bucket</strong> (<code>logs-bucket</code>), <strong>D1 SQLite database</strong> (<code>logs-db</code>), and <strong>Durable Object</strong> namespace (<code>RealtimeLogStream</code>) directly from <code>wrangler.toml</code> with zero manual configuration.
         </p>
 
         <p>Or deploy manually via CLI in 4 simple commands:</p>

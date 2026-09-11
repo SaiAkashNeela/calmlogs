@@ -814,18 +814,58 @@
       box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 16px;
+    }
+
+    .cf-chart-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cf-chart-legend {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 11.5px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .cf-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cf-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .cf-chart-note {
+      font-size: 11.5px;
+      font-family: var(--font-mono);
+      color: #059669;
+      font-weight: 500;
     }
 
     .cf-bar-item {
       background: #ffffff;
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
-      padding: 20px 24px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      padding: 18px 22px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       transition: all 0.2s ease;
     }
 
@@ -847,6 +887,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
     }
 
     .cf-pill {
@@ -860,10 +901,23 @@
       border-radius: 999px;
     }
 
+    .cf-pill.pill-r2 { color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; }
+    .cf-pill.pill-workers { color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe; }
+    .cf-pill.pill-do { color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; }
+    .cf-pill.pill-d1 { color: #7c3aed; background: #f5f3ff; border: 1px solid #ddd6fe; }
+    .cf-pill.pill-net { color: #b45309; background: #fffbeb; border: 1px solid #fde68a; }
+
     .cf-bar-title {
-      font-size: 15px;
+      font-size: 14.5px;
       font-weight: 600;
       color: var(--text-main);
+    }
+
+    .cf-bar-metric {
+      font-size: 13px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      color: var(--text-muted);
     }
 
     .cf-bar-tags {
@@ -874,51 +928,62 @@
     }
 
     .cf-cap-badge {
-      font-size: 12px;
+      font-size: 11.5px;
       font-family: var(--font-mono);
       font-weight: 600;
       color: #047857;
       background: #ecfdf5;
       border: 1px solid #a7f3d0;
-      padding: 2px 9px;
+      padding: 2px 8px;
       border-radius: 999px;
     }
 
     .cf-quota-badge {
-      font-size: 12px;
+      font-size: 11.5px;
       font-family: var(--font-mono);
       font-weight: 600;
       color: #374151;
       background: #f3f4f6;
       border: 1px solid #e5e7eb;
-      padding: 2px 9px;
+      padding: 2px 8px;
       border-radius: 999px;
+    }
+
+    .cf-chart-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
 
     .cf-bar-track {
       position: relative;
-      height: 26px;
+      flex: 1;
+      height: 14px;
       background: #e4e4e7;
-      border-radius: 8px;
+      border-radius: 999px;
       overflow: hidden;
-      display: flex;
-      align-items: center;
     }
 
     .cf-bar-fill {
       height: 100%;
-      border-radius: 7px;
-      display: flex;
-      align-items: center;
-      padding: 0 14px;
-      color: #ffffff;
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      white-space: nowrap;
+      border-radius: 999px;
       transition: width 0.4s ease;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    .cf-bar-fill.fill-r2 { background: linear-gradient(90deg, #10b981, #059669); }
+    .cf-bar-fill.fill-workers { background: linear-gradient(90deg, #3b82f6, #1d4ed8); }
+    .cf-bar-fill.fill-do { background: linear-gradient(90deg, #0ea5e9, #0284c7); }
+    .cf-bar-fill.fill-d1 { background: linear-gradient(90deg, #8b5cf6, #6d28d9); }
+    .cf-bar-fill.fill-net { background: linear-gradient(90deg, #f59e0b, #d97706); }
+
+    .cf-bar-scale-val {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-main);
+      min-width: 78px;
+      text-align: right;
     }
 
     .cf-bar-foot {
@@ -934,6 +999,27 @@
 
     .cf-bar-foot strong {
       color: var(--text-main);
+    }
+
+    .cf-chart-summary {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: var(--radius-md);
+      font-size: 12.5px;
+      color: #166534;
+      line-height: 1.5;
+    }
+
+    .cf-summary-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #059669;
+      flex-shrink: 0;
     }
 
     /* FAQ Section */
@@ -1050,12 +1136,15 @@
       .compose-grid { grid-template-columns: 1fr; gap: 24px; }
       .compose-code-body { font-size: 11px; padding: 14px 16px; line-height: 1.55; }
       .cf-chart-panel { padding: 18px 14px; gap: 14px; }
+      .cf-chart-head { flex-direction: column; align-items: flex-start; gap: 8px; }
       .cf-bar-item { padding: 14px 12px; gap: 10px; }
       .cf-bar-meta { flex-direction: column; align-items: flex-start; gap: 6px; }
       .cf-bar-tags { width: 100%; justify-content: space-between; }
-      .cf-bar-track { height: 22px; }
-      .cf-bar-fill { font-size: 10px; padding: 0 8px; }
+      .cf-chart-row { gap: 10px; }
+      .cf-bar-track { height: 12px; }
+      .cf-bar-scale-val { font-size: 11.5px; min-width: 60px; }
       .cf-bar-foot { flex-direction: column; align-items: flex-start; gap: 4px; }
+      .cf-chart-summary { padding: 12px 14px; font-size: 12px; }
       .faq-grid { grid-template-columns: 1fr; gap: 16px; }
       .terminal-tabs { overflow-x: auto; max-width: 100%; padding-bottom: 2px; }
       .showcase { margin: 16px auto 48px; }
@@ -1169,7 +1258,7 @@
         <span class="badge-dot">●</span>
         <span>Open Source &amp; Edge-Native</span>
         <span class="badge-sep">&bull;</span>
-        <span>$0 Cloudflare Free Tier</span>
+        <span>Cloudflare Free Tier Included</span>
       </div>
       <h1>Log everything without changing your code.</h1>
       <p class="hero-sub">
@@ -1363,26 +1452,39 @@
       </div>
 
       <div class="cf-chart-panel">
+        <div class="cf-chart-head">
+          <div class="cf-chart-legend">
+            <span class="cf-legend-item"><span class="cf-legend-dot" style="background: #10b981;"></span> Storage (R2)</span>
+            <span class="cf-legend-item"><span class="cf-legend-dot" style="background: #3b82f6;"></span> Compute (Workers)</span>
+            <span class="cf-legend-item"><span class="cf-legend-dot" style="background: #0ea5e9;"></span> Realtime (DO)</span>
+            <span class="cf-legend-item"><span class="cf-legend-dot" style="background: #8b5cf6;"></span> Database (D1)</span>
+            <span class="cf-legend-item"><span class="cf-legend-dot" style="background: #f59e0b;"></span> Bandwidth (Egress)</span>
+          </div>
+          <div class="cf-chart-note">Permanent Free Quotas &bull; Auto-Provisioned in 1 Click</div>
+        </div>
+
         <!-- Horizontal Bar Row 1: R2 Cold Storage -->
         <div class="cf-bar-item">
           <div class="cf-bar-meta">
             <div class="cf-bar-title-wrap">
-              <span class="cf-pill" style="color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0;">Cloudflare R2</span>
-              <span class="cf-bar-title">10 GB Storage Allowance</span>
+              <span class="cf-pill pill-r2">Cloudflare R2</span>
+              <span class="cf-bar-title">Cold Storage</span>
+              <span class="cf-bar-metric">10 GB Monthly Allowance</span>
             </div>
             <div class="cf-bar-tags">
               <span class="cf-cap-badge">~100M Logs Capacity</span>
-              <span class="cf-quota-badge">10 GB Monthly</span>
+              <span class="cf-quota-badge">Permanent Free Tier</span>
             </div>
           </div>
-          <div class="cf-bar-track">
-            <div class="cf-bar-fill" style="width: 95%; background: linear-gradient(90deg, #10b981, #059669);">
-              Compressed JSONL Archives &bull; 95% Startup Volume
+          <div class="cf-chart-row">
+            <div class="cf-bar-track">
+              <div class="cf-bar-fill fill-r2" style="width: 92%;"></div>
             </div>
+            <span class="cf-bar-scale-val">10 GB / Mo</span>
           </div>
           <div class="cf-bar-foot">
-            <span>Included Quota: <strong>10 GB Storage</strong> &bull; 1M Writes / Month</span>
-            <span>Egress: <strong>Free Worldwide Bandwidth</strong></span>
+            <span>Included Quota: <strong>10 GB Storage</strong> &bull; <strong>1M Class A Writes / Mo</strong> &bull; Compressed JSONL</span>
+            <span>Worldwide Access: <strong>Free Worldwide Bandwidth</strong></span>
           </div>
         </div>
 
@@ -1390,68 +1492,108 @@
         <div class="cf-bar-item">
           <div class="cf-bar-meta">
             <div class="cf-bar-title-wrap">
-              <span class="cf-pill" style="color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe;">Cloudflare Workers</span>
-              <span class="cf-bar-title">100,000 Daily Requests</span>
+              <span class="cf-pill pill-workers">Cloudflare Workers</span>
+              <span class="cf-bar-title">Edge Ingestion</span>
+              <span class="cf-bar-metric">100,000 Requests / Day</span>
             </div>
             <div class="cf-bar-tags">
               <span class="cf-cap-badge">~5M Logs / Day (Batched)</span>
               <span class="cf-quota-badge">3,000,000 / Month</span>
             </div>
           </div>
-          <div class="cf-bar-track">
-            <div class="cf-bar-fill" style="width: 88%; background: linear-gradient(90deg, #3b82f6, #1d4ed8);">
-              Global Edge Ingest &bull; WebSocket Live-Tail
+          <div class="cf-chart-row">
+            <div class="cf-bar-track">
+              <div class="cf-bar-fill fill-workers" style="width: 86%;"></div>
             </div>
+            <span class="cf-bar-scale-val">3M / Mo</span>
           </div>
           <div class="cf-bar-foot">
-            <span>Included Quota: <strong>100,000 Ingestion Reqs / Day</strong></span>
-            <span>Latency: <strong>&lt;15ms Worldwide (275+ PoPs)</strong></span>
+            <span>Included Quota: <strong>100,000 Daily Requests</strong> &bull; <strong>&lt;15ms Latency</strong> &bull; 275+ Edge Locations</span>
+            <span>Edge Routing: <strong>Stateless Request Verification</strong></span>
           </div>
         </div>
 
-        <!-- Horizontal Bar Row 3: D1 SQLite Database -->
+        <!-- Horizontal Bar Row 3: Durable Objects Realtime Hub -->
         <div class="cf-bar-item">
           <div class="cf-bar-meta">
             <div class="cf-bar-title-wrap">
-              <span class="cf-pill" style="color: #7c3aed; background: #f5f3ff; border: 1px solid #ddd6fe;">Cloudflare D1</span>
-              <span class="cf-bar-title">5 GB Serverless Database</span>
+              <span class="cf-pill pill-do">Durable Objects (DO)</span>
+              <span class="cf-bar-title">Realtime WebSocket Hub</span>
+              <span class="cf-bar-metric">1,000,000 Requests / Mo</span>
+            </div>
+            <div class="cf-bar-tags">
+              <span class="cf-cap-badge">Sub-100ms Live-Tail</span>
+              <span class="cf-quota-badge">1M Requests / Mo</span>
+            </div>
+          </div>
+          <div class="cf-chart-row">
+            <div class="cf-bar-track">
+              <div class="cf-bar-fill fill-do" style="width: 84%;"></div>
+            </div>
+            <span class="cf-bar-scale-val">1M / Mo</span>
+          </div>
+          <div class="cf-bar-foot">
+            <span>Included Quota: <strong>1,000,000 Invocations / Mo</strong> &bull; <strong>400,000 GB-s Compute</strong> &bull; Auto-Provisioned</span>
+            <span>Realtime Edge: <strong>Instant WebSocket Broadcast Fan-Out</strong></span>
+          </div>
+        </div>
+
+        <!-- Horizontal Bar Row 4: D1 SQLite Database -->
+        <div class="cf-bar-item">
+          <div class="cf-bar-meta">
+            <div class="cf-bar-title-wrap">
+              <span class="cf-pill pill-d1">Cloudflare D1</span>
+              <span class="cf-bar-title">Serverless Database</span>
+              <span class="cf-bar-metric">5 GB Relational SQLite</span>
             </div>
             <div class="cf-bar-tags">
               <span class="cf-cap-badge">Millions of Index Rows</span>
               <span class="cf-quota-badge">5M Reads / Day</span>
             </div>
           </div>
-          <div class="cf-bar-track">
-            <div class="cf-bar-fill" style="width: 82%; background: linear-gradient(90deg, #8b5cf6, #6d28d9);">
-              5M Daily Reads &bull; 100k Daily Writes
+          <div class="cf-chart-row">
+            <div class="cf-bar-track">
+              <div class="cf-bar-fill fill-d1" style="width: 80%;"></div>
             </div>
+            <span class="cf-bar-scale-val">5 GB DB</span>
           </div>
           <div class="cf-bar-foot">
-            <span>Included Quota: <strong>5 GB SQLite Database</strong> &bull; 5M Reads / Day</span>
+            <span>Included Quota: <strong>5 GB SQLite Database</strong> &bull; <strong>5,000,000 Reads / Day</strong> &bull; 100k Writes / Day</span>
             <span>Metadata: <strong>BetterAuth Workspaces &amp; Catalogs</strong></span>
           </div>
         </div>
 
-        <!-- Horizontal Bar Row 4: Bandwidth & Global Egress -->
+        <!-- Horizontal Bar Row 5: Bandwidth & Global Egress -->
         <div class="cf-bar-item">
           <div class="cf-bar-meta">
             <div class="cf-bar-title-wrap">
-              <span class="cf-pill" style="color: #b45309; background: #fffbeb; border: 1px solid #fde68a;">Network Bandwidth</span>
-              <span class="cf-bar-title">Unlimited Free Egress</span>
+              <span class="cf-pill pill-net">Network Bandwidth</span>
+              <span class="cf-bar-title">Global Edge Egress</span>
+              <span class="cf-bar-metric">Unlimited Data Transfer</span>
             </div>
             <div class="cf-bar-tags">
-              <span class="cf-cap-badge">Zero Bandwidth Penalty</span>
+              <span class="cf-cap-badge">Zero Bandwidth Tax</span>
               <span class="cf-quota-badge">Uncapped Transfer</span>
             </div>
           </div>
-          <div class="cf-bar-track">
-            <div class="cf-bar-fill" style="width: 100%; background: linear-gradient(90deg, #f59e0b, #b45309);">
-              Unrestricted Egress Bandwidth &bull; Compare to AWS S3 ($0.09/GB)
+          <div class="cf-chart-row">
+            <div class="cf-bar-track">
+              <div class="cf-bar-fill fill-net" style="width: 100%;"></div>
             </div>
+            <span class="cf-bar-scale-val">Uncapped</span>
           </div>
           <div class="cf-bar-foot">
-            <span>Included Quota: <strong>Unlimited Edge CDN Egress</strong></span>
-            <span>Lock-In: <strong>None</strong></span>
+            <span>Included Quota: <strong>Unlimited Edge CDN Egress</strong> &bull; Worldwide Anycast Network</span>
+            <span>Egress Policy: <strong>Permanent Free Bandwidth</strong></span>
+          </div>
+        </div>
+
+        <div class="cf-chart-summary">
+          <div class="cf-summary-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          </div>
+          <div class="cf-summary-text">
+            <strong>1-Click Auto-Provisioning:</strong> 1-Click deployment reads <code>wrangler.toml</code> and automatically provisions your <strong>R2 bucket</strong>, <strong>D1 database</strong>, and <strong>Durable Object</strong> namespace in your Cloudflare account with zero manual configuration.
           </div>
         </div>
       </div>
