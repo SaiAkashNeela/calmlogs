@@ -73,6 +73,7 @@ export const invitation = sqliteTable("invitation", {
 	expiresAt: integer('expiresAt', { mode: 'timestamp' }).notNull(),
 	inviterId: text('inviterId').notNull().references(() => user.id),
 	createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
+	teamId: text('teamId'),
 });
 
 export const projects = sqliteTable("projects", {

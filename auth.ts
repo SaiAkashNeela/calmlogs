@@ -24,6 +24,7 @@ export const auth = betterAuth({
   plugins: [
     organization({
       ac,
+      cancelPendingInvitationsOnReInvite: true,
       roles: {
         owner: writeRole,
         write: writeRole,

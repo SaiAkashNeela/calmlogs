@@ -982,25 +982,62 @@ cargo run --release | npx calmlogs --project <span class="syn-str">"trading"</sp
           </a>
         </p>
 
-        <p style="font-size: 13px; color: var(--text-muted); background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px 16px; border-radius: 8px; line-height: 1.5; margin-bottom: 20px;">
+        <p style="font-size: 13px; color: var(--text-muted); background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px 16px; border-radius: 8px; line-height: 1.5; margin-bottom: 16px;">
           <strong>Automatic Infrastructure Provisioning:</strong> Cloudflare automatically creates your <strong>R2 bucket</strong> (<code>logs-bucket</code>), <strong>D1 SQLite database</strong> (<code>logs-db</code>), and <strong>Durable Object</strong> namespace (<code>RealtimeLogStream</code>) directly from <code>wrangler.toml</code> with zero manual configuration.
         </p>
 
-        <p>Or deploy manually via CLI in 4 simple commands:</p>
+        <div style="margin: 16px 0 24px; padding: 18px 20px; background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; border-radius: 8px;">
+          <div style="font-size: 13.5px; font-weight: 700; color: #92400e; margin-bottom: 6px;">
+            ⚠️ CRITICAL REQUIREMENT FOR OPEN-SOURCE DEPLOYMENTS:
+          </div>
+          <div style="font-size: 13px; color: #78350f; line-height: 1.6;">
+            Anyone deploying this open-source project <strong>MUST configure their Google OAuth credentials and URLs</strong> in Cloudflare and Google Cloud Console. Without these, Google sign-in and workspace authentication will fail:
+            
+            <div style="margin-top: 10px; font-family: var(--font-mono); font-size: 11.5px; background: #ffffff; padding: 12px 14px; border: 1px solid #fde68a; border-radius: 6px; color: #18181b; line-height: 1.6;">
+              <span style="color: #6b7280;"># 1. Set Cloudflare Secrets</span><br/>
+              <strong>npx wrangler secret put GOOGLE_CLIENT_ID</strong><br/>
+              <strong>npx wrangler secret put GOOGLE_CLIENT_SECRET</strong><br/>
+              <strong>npx wrangler secret put BETTER_AUTH_SECRET</strong><br/><br/>
+              <span style="color: #6b7280;"># 2. Set Cloudflare Environment Variable in wrangler.toml</span><br/>
+              <strong>BETTER_AUTH_URL = "https://&lt;your-worker&gt;.workers.dev"</strong>
+            </div>
+
+            <div style="margin-top: 12px; font-size: 12.5px; color: #92400e; line-height: 1.55;">
+              In your <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style="color: #b45309; text-decoration: underline; font-weight: 700;">Google Cloud Console (OAuth 2.0 Web Client)</a>, you <strong>MUST</strong> configure:
+              <ul style="margin: 6px 0 0 16px; padding: 0;">
+                <li><strong>Authorized JavaScript origins (JS URL):</strong><br/>
+                  Production: <strong><code>https://&lt;your-worker&gt;.workers.dev</code></strong> (or <code>https://&lt;your-custom-domain&gt;</code>)<br/>
+                  Local Dev: <strong><code>http://localhost:3000</code></strong>
+                </li>
+                <li style="margin-top: 6px;"><strong>Authorized redirect URIs (OAuth Redirect):</strong><br/>
+                  Production: <strong><code>https://&lt;your-worker&gt;.workers.dev/api/auth/callback/google</code></strong><br/>
+                  Local Dev: <strong><code>http://localhost:3000/api/auth/callback/google</code></strong>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <p>Or deploy manually via CLI in 5 simple commands:</p>
         <div class="code-box">
           <div class="code-top"><span>Bash</span><button class="copy-btn" onclick="copySnippet(this)">Copy</button></div>
           <pre><code><span class="syn-comm"># 1. Clone repository</span>
 git clone https://github.com/SaiAkashNeela/calmlogs.git
 cd calmlogs
 
-<span class="syn-comm"># 2. Install dependencies & build</span>
+<span class="syn-comm"># 2. Install dependencies &amp; build</span>
 bun install
 bun run build
 
 <span class="syn-comm"># 3. Apply database migrations</span>
 npx wrangler d1 migrations apply DB --remote
 
-<span class="syn-comm"># 4. Deploy worker to edge</span>
+<span class="syn-comm"># 4. Set required Google OAuth &amp; Auth secrets (BOLD REQUIREMENT)</span>
+npx wrangler secret put GOOGLE_CLIENT_ID
+npx wrangler secret put GOOGLE_CLIENT_SECRET
+npx wrangler secret put BETTER_AUTH_SECRET
+
+<span class="syn-comm"># 5. Deploy worker to edge</span>
 npx wrangler deploy</code></pre>
         </div>
       </section>

@@ -1669,6 +1669,10 @@
           <p>Yes. CalmLogs is released under the MIT license. You can run it locally, self-host it on your own Cloudflare account for virtually zero cost, or deploy it in your own private cloud.</p>
         </div>
         <div class="faq-item">
+          <h4>What do I need to configure when self-hosting?</h4>
+          <p>You <strong>MUST configure your Google OAuth credentials (<code>GOOGLE_CLIENT_ID</code> and <code>GOOGLE_CLIENT_SECRET</code>)</strong> and <strong><code>BETTER_AUTH_URL</code></strong> in your Cloudflare environment. In your Google Cloud Console OAuth Client, set <strong>Authorized JavaScript origins (JS URL): <code>https://&lt;your-domain&gt;</code></strong> and <strong>Authorized redirect URIs (OAuth Redirect): <code>https://&lt;your-domain&gt;/api/auth/callback/google</code></strong>.</p>
+        </div>
+        <div class="faq-item">
           <h4>How does it auto-detect Docker Compose services?</h4>
           <p>The CLI parses standard compose log streams (e.g. <code>api-1 | ...</code>). It extracts the service name, strips the container instance suffix, and routes logs dynamically into separate services.</p>
         </div>

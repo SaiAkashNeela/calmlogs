@@ -34,6 +34,7 @@ export function createAuth(env: any) {
     plugins: [
       organization({
         ac,
+        cancelPendingInvitationsOnReInvite: true,
         roles: {
           owner: writeRole,
           write: writeRole,

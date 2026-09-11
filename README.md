@@ -186,6 +186,27 @@ See the full report in [`docs/security-audit.md`](docs/security-audit.md).
 
 [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/SaiAkashNeela/calmlogs)
 
+> [!IMPORTANT]
+> **CRITICAL CONFIGURATION FOR OPEN-SOURCE DEPLOYMENTS:**
+> When self-hosting CalmLogs, you **MUST configure your Google OAuth credentials and URLs** in Cloudflare and in your [Google Cloud Console](https://console.cloud.google.com/apis/credentials):
+> 
+> 1. **Cloudflare Environment Secrets:**
+>    ```bash
+>    npx wrangler secret put GOOGLE_CLIENT_ID
+>    npx wrangler secret put GOOGLE_CLIENT_SECRET
+>    npx wrangler secret put BETTER_AUTH_SECRET
+>    ```
+> 2. **Cloudflare Environment Variable (`BETTER_AUTH_URL`):**  
+>    In `wrangler.toml` or Cloudflare Dashboard, set **`BETTER_AUTH_URL = "https://<your-worker-subdomain>.workers.dev"`** (or your custom domain).
+> 
+> 3. **Google Cloud Console (OAuth 2.0 Web Client) Settings:**
+>    - **Authorized JavaScript origins (JS URL):**  
+>      - Production: **`https://<your-worker-subdomain>.workers.dev`** (or `https://<your-custom-domain>`)  
+>      - Local Dev: **`http://localhost:3000`**  
+>    - **Authorized redirect URIs (OAuth Redirect):**  
+>      - Production: **`https://<your-worker-subdomain>.workers.dev/api/auth/callback/google`** (or `https://<your-custom-domain>/api/auth/callback/google`)  
+>      - Local Dev: **`http://localhost:3000/api/auth/callback/google`**  
+
 ### Or Deploy Manually via CLI
 
 ```bash
@@ -200,7 +221,12 @@ bun run build
 # 3. Apply database migrations to Cloudflare D1
 npx wrangler d1 migrations apply DB --remote
 
-# 4. Deploy worker to edge
+# 4. Set required Google OAuth & Auth secrets (BOLD REQUIREMENT)
+npx wrangler secret put GOOGLE_CLIENT_ID
+npx wrangler secret put GOOGLE_CLIENT_SECRET
+npx wrangler secret put BETTER_AUTH_SECRET
+
+# 5. Deploy worker to edge
 npx wrangler deploy
 ```
 

@@ -83,8 +83,9 @@ export default function MembersModal({
       const res = await authClient.organization.inviteMember({
         email: inviteEmail.trim(),
         role: inviteRole,
-        organizationId: activeOrgId
-      });
+        organizationId: activeOrgId,
+        resend: true,
+      } as any);
 
       if (res.error) {
         setInviteError(res.error.message || 'Failed to send invitation');

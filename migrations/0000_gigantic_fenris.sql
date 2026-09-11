@@ -23,6 +23,8 @@ CREATE TABLE `invitation` (
 	`status` text NOT NULL,
 	`expiresAt` integer NOT NULL,
 	`inviterId` text NOT NULL,
+	`createdAt` integer NOT NULL DEFAULT (unixepoch()),
+	`teamId` text,
 	FOREIGN KEY (`organizationId`) REFERENCES `organization`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`inviterId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
 );
