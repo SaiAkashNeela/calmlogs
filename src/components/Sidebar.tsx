@@ -24,7 +24,7 @@ export default function Sidebar({ projects, services, activeProjectId, activeSer
           <div className="w-6 h-6 rounded bg-zinc-900 flex items-center justify-center">
             <LayoutGrid className="w-3.5 h-3.5 text-white" />
           </div>
-          <span className="font-semibold text-sm tracking-tight">Realtime Logs</span>
+          <span className="font-semibold text-sm tracking-tight">CalmLogs</span>
         </div>
       </div>
       
