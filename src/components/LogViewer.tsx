@@ -160,7 +160,11 @@ export default function LogViewer({
   // Scroll handling: auto-scroll to bottom like standard terminal
   useEffect(() => {
     if (autoScroll && streamContainerRef.current) {
-      streamContainerRef.current.scrollTop = streamContainerRef.current.scrollHeight;
+      requestAnimationFrame(() => {
+        if (streamContainerRef.current) {
+          streamContainerRef.current.scrollTop = streamContainerRef.current.scrollHeight;
+        }
+      });
     }
   }, [filteredLogs, autoScroll]);
 
