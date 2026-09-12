@@ -493,7 +493,7 @@ export default {
          }
        }
        
-       logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+       logs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
        return addCors(new Response(JSON.stringify(logs), { headers: { 'Content-Type': 'application/json' } }));
     }
 

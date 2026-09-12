@@ -96,6 +96,7 @@ export default function LogViewer({
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
+          data.sort((a: LogEvent, b: LogEvent) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
           setLogs(data);
         }
       }
@@ -122,7 +123,7 @@ export default function LogViewer({
         try {
           const log: LogEvent = JSON.parse(event.data);
           if (!isPausedRef.current) {
-            setLogs(prev => [log, ...prev].slice(0, 1500));
+            setLogs(prev => [...prev, log].slice(-1500));
           }
         } catch (e) {}
       };
@@ -156,12 +157,31 @@ export default function LogViewer({
     };
   }, [projectId, serviceId, fetchHistorical, connectWs]);
 
-  // Scroll handling
+  // Scroll handling: auto-scroll to bottom like standard terminal
   useEffect(() => {
     if (autoScroll && streamContainerRef.current) {
-      streamContainerRef.current.scrollTop = 0;
+      streamContainerRef.current.scrollTop = streamContainerRef.current.scrollHeight;
     }
-  }, [logs, autoScroll]);
+  }, [filteredLogs, autoScroll]);
+
+  const handleScroll = () => {
+    if (!streamContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = streamContainerRef.current;
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 30;
+    if (isAtBottom && !autoScroll) {
+      setAutoScroll(true);
+    } else if (!isAtBottom && autoScroll) {
+      setAutoScroll(false);
+    }
+  };
+
+  const handleToggleAutoScroll = () => {
+    const next = !autoScroll;
+    setAutoScroll(next);
+    if (next && streamContainerRef.current) {
+      streamContainerRef.current.scrollTop = streamContainerRef.current.scrollHeight;
+    }
+  };
 
   const filteredLogs = logs.filter(l => {
     const levelMatch = activeLevels.has(l.level);
@@ -425,6 +445,7 @@ export default function LogViewer({
         {/* Live Stream View */}
         <div
           ref={streamContainerRef}
+          onScroll={handleScroll}
           className="flex-1 overflow-y-auto bg-white font-mono text-xs divide-y divide-zinc-100"
         >
           {filteredLogs.length === 0 ? (
@@ -496,7 +517,7 @@ export default function LogViewer({
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setAutoScroll(!autoScroll)}
+              onClick={handleToggleAutoScroll}
               className={cn(
                 "flex items-center gap-1 hover:text-zinc-800 transition-colors",
                 autoScroll ? "text-emerald-600 font-medium" : "text-zinc-500"
