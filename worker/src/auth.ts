@@ -21,14 +21,34 @@ const readRole = ac.newRole({
 });
 
 export function createAuth(env: any) {
+  const trustedOrigins: string[] = [];
+
+  if (env.BETTER_AUTH_URL) {
+    try {
+      trustedOrigins.push(new URL(env.BETTER_AUTH_URL).origin);
+    } catch {
+      trustedOrigins.push(env.BETTER_AUTH_URL.replace(/\/+$/, ''));
+    }
+  }
+
+  if (env.TRUSTED_ORIGINS) {
+    const extra = env.TRUSTED_ORIGINS.split(',').map((s: string) => s.trim()).filter(Boolean);
+    trustedOrigins.push(...extra);
+  }
+
+  const baseURL = env.BETTER_AUTH_URL
+    ? env.BETTER_AUTH_URL.replace(/\/+$/, '')
+    : undefined;
+
   return betterAuth({
-    secret: env.BETTER_AUTH_SECRET || "calmlogs-secret-key-32-chars-minimum-dev",
-    baseURL: env.BETTER_AUTH_URL || "http://localhost:3000",
+    secret: env.BETTER_AUTH_SECRET,
+    baseURL,
+    trustedOrigins,
     database: drizzleAdapter(drizzle(env.DB, { schema }), { provider: "sqlite" }),
     socialProviders: {
       google: {
-        clientId: env.GOOGLE_CLIENT_ID || "dummy",
-        clientSecret: env.GOOGLE_CLIENT_SECRET || "dummy"
+        clientId: env.GOOGLE_CLIENT_ID || "",
+        clientSecret: env.GOOGLE_CLIENT_SECRET || ""
       }
     },
     plugins: [
