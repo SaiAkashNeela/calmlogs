@@ -238,6 +238,6 @@ npx wrangler deploy
 - **Design & UX Partner:** [Geeks Designs](https://geeksdesigns.com)
 - **Built With:** Cloudflare Workers, Durable Objects, BetterAuth, D1 SQLite, R2, Vite, and React.
 
-## License.
+## License
 
 Released under the **[MIT License](LICENSE)**. Free for personal, commercial, and open-source use.
