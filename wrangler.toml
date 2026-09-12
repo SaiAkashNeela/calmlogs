@@ -7,6 +7,12 @@ compatibility_date = "2024-03-20"
 binding = "DB"
 database_name = "logs-db"
 database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+# NOTE: Cloudflare does NOT auto-apply D1 migrations on deploy/build.
+# Run migrations using:
+#   Local:  bun run db:migrate:local   (npx wrangler d1 migrations apply DB --local)
+#   Remote: bun run db:migrate:remote  (npx wrangler d1 migrations apply DB --remote)
+# Or run "bun run deploy" which automatically migrates and deploys.
 
 [[r2_buckets]]
 binding = "LOG_BUCKET"
