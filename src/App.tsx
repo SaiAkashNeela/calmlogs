@@ -437,10 +437,10 @@ export default function App() {
                 <span className="text-zinc-500">Invited Role:</span>
                 <span className="uppercase font-semibold text-emerald-700">{inviteModalData.role}</span>
               </div>
-              {user?.email && (
+              {currentUser?.email && (
                 <div className="flex justify-between border-t border-zinc-200/70 pt-1.5">
                   <span className="text-zinc-500">Google Account:</span>
-                  <span className="text-zinc-800 font-medium truncate max-w-[200px]" title={user.email}>{user.email}</span>
+                  <span className="text-zinc-800 font-medium truncate max-w-[200px]" title={currentUser.email}>{currentUser.email}</span>
                 </div>
               )}
             </div>
