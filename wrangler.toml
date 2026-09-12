@@ -6,8 +6,8 @@ workers_dev = true
 
 [[d1_databases]]
 binding = "DB"
-database_name = "logs-db"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_name = "calmlogs-db"
+database_id = "82710962-22ac-419e-a159-7a6da3f24ac1"
 migrations_dir = "migrations"
 # NOTE: Cloudflare does NOT auto-apply D1 migrations on deploy/build.
 # Run migrations using:
@@ -17,7 +17,7 @@ migrations_dir = "migrations"
 
 [[r2_buckets]]
 binding = "LOG_BUCKET"
-bucket_name = "logs-bucket"
+bucket_name = "calmlogs-bucket"
 
 [durable_objects]
 bindings = [
@@ -29,7 +29,6 @@ tag = "v1"
 new_sqlite_classes = ["RealtimeLogStream"]
 
 [vars]
-BETTER_AUTH_URL = "http://localhost:3000"
 # REQUIRED FOR PRODUCTION AUTHENTICATION:
 # 1. Cloudflare Secrets:
 #    npx wrangler secret put GOOGLE_CLIENT_ID
