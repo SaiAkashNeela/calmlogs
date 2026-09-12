@@ -378,6 +378,87 @@ export default {
         return addCors(new Response(JSON.stringify({ success: true, id: serviceId }), { headers: { 'Content-Type': 'application/json' } }));
       }
     }
+
+    if (url.pathname.startsWith('/api/keys')) {
+      const activeOrgId = session?.session?.activeOrganizationId;
+      if (!activeOrgId) return addCors(new Response("Requires active organization", { status: 400 }));
+
+      const userId = session?.user?.id;
+      const memberRow = await env.DB.prepare(
+        `SELECT role FROM member WHERE organizationId = ? AND userId = ?`
+      ).bind(activeOrgId, userId).first<{ role: string }>();
+
+      if (request.method === 'GET') {
+        const { results } = await env.DB.prepare(`
+          SELECT 
+            s.id as service_id, 
+            s.name as service_name, 
+            s.type as service_type, 
+            s.project_id, 
+            p.name as project_name, 
+            s.created_at, 
+            s.last_seen_at,
+            CASE WHEN s.ingestion_key_hash IS NOT NULL AND s.ingestion_key_hash != '' THEN 1 ELSE 0 END as has_key
+          FROM services s
+          JOIN projects p ON s.project_id = p.id
+          WHERE p.organization_id = ?
+          ORDER BY s.created_at DESC
+        `).bind(activeOrgId).all();
+
+        return addCors(new Response(JSON.stringify(results), { headers: { 'Content-Type': 'application/json' } }));
+      }
+
+      if (memberRow?.role === 'read') {
+        return addCors(new Response(JSON.stringify({ error: "Read-only access: cannot modify keys" }), { status: 403 }));
+      }
+
+      if (request.method === 'DELETE') {
+        const serviceId = url.searchParams.get('service_id') || url.searchParams.get('id');
+        if (!serviceId) return addCors(new Response("Missing service_id", { status: 400 }));
+
+        const sCheck = await env.DB.prepare(`
+          SELECT s.id FROM services s JOIN projects p ON s.project_id = p.id 
+          WHERE s.id = ? AND p.organization_id = ?
+        `).bind(serviceId, activeOrgId).first();
+        if (!sCheck) return addCors(new Response("Service not found or unauthorized", { status: 404 }));
+
+        const now = new Date().toISOString();
+        await env.DB.prepare(`UPDATE services SET ingestion_key_hash = NULL, updated_at = ? WHERE id = ?`)
+          .bind(now, serviceId).run();
+
+        return addCors(new Response(JSON.stringify({ success: true, service_id: serviceId, has_key: 0 }), {
+          headers: { 'Content-Type': 'application/json' }
+        }));
+      }
+
+      if (request.method === 'POST') {
+        const body: any = await request.json().catch(() => ({}));
+        const serviceId = body.service_id || body.serviceId || url.searchParams.get('service_id') || url.searchParams.get('id');
+        if (!serviceId) return addCors(new Response("Missing service_id", { status: 400 }));
+
+        const sCheck = await env.DB.prepare(`
+          SELECT s.id, s.name, p.name as project_name FROM services s JOIN projects p ON s.project_id = p.id 
+          WHERE s.id = ? AND p.organization_id = ?
+        `).bind(serviceId, activeOrgId).first<{ id: string; name: string; project_name: string }>();
+        if (!sCheck) return addCors(new Response("Service not found or unauthorized", { status: 404 }));
+
+        const rawApiKey = `cl_live_${crypto.randomUUID().replace(/-/g, '')}`;
+        const keyHash = await sha256Hex(rawApiKey);
+        const now = new Date().toISOString();
+
+        await env.DB.prepare(`UPDATE services SET ingestion_key_hash = ?, updated_at = ? WHERE id = ?`)
+          .bind(keyHash, now, serviceId).run();
+
+        return addCors(new Response(JSON.stringify({ 
+          success: true, 
+          service_id: serviceId, 
+          service_name: sCheck.name,
+          project_name: sCheck.project_name,
+          apiKey: rawApiKey,
+          has_key: 1 
+        }), { headers: { 'Content-Type': 'application/json' } }));
+      }
+    }
     
     if (url.pathname.startsWith('/api/historical')) {
        const projectId = url.searchParams.get('project_id');
@@ -460,6 +541,8 @@ export default {
               projectId: matched.project_id,
               projectName: matched.project_name
             };
+          } else {
+            return addCors(new Response(JSON.stringify({ error: "Invalid or revoked API key" }), { status: 401 }));
           }
         }
 

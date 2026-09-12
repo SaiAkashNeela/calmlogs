@@ -13,7 +13,8 @@ import {
   ChevronUp,
   UserCheck,
   Users,
-  BookOpen
+  BookOpen,
+  Key
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -23,6 +24,7 @@ import FeedbackModal from './FeedbackModal';
 import DeleteAccountModal from './DeleteAccountModal';
 import MembersModal from './MembersModal';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
+import ApiKeysModal from './ApiKeysModal';
 import { authClient } from '../lib/auth-client';
 import { useCachedAvatar } from '../lib/avatar-cache';
 
@@ -69,6 +71,8 @@ export default function Sidebar({
   const [showFeedback, setShowFeedback] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [showMembersModal, setShowMembersModal] = useState(false);
+  const [showApiKeysModal, setShowApiKeysModal] = useState(false);
+  const [apiKeysInitialServiceId, setApiKeysInitialServiceId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'project' | 'service'; id: string; name: string } | null>(null);
   
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -123,6 +127,16 @@ export default function Sidebar({
           </div>
 
           <div className="flex items-center gap-1">
+            <button
+              onClick={() => {
+                setApiKeysInitialServiceId(null);
+                setShowApiKeysModal(true);
+              }}
+              title="API Keys"
+              className="p-1 rounded text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors border border-transparent hover:border-zinc-200"
+            >
+              <Key className="w-3.5 h-3.5" />
+            </button>
             <button
               onClick={() => setShowMembersModal(true)}
               title="Members & Invitations"
@@ -191,7 +205,7 @@ export default function Sidebar({
                       {projectServices.map(service => {
                         const isActive = activeProjectId === project.id && activeServiceId === service.id;
                         return (
-                          <li key={service.id} className="group/svc flex items-center">
+                          <li key={service.id} className="group/svc flex items-center justify-between">
                             <button
                               onClick={() => onSelectService(project.id, service.id)}
                               className={cn(
@@ -208,6 +222,33 @@ export default function Sidebar({
                               <span className="truncate flex-1">{service.name}</span>
                               {isActive && <ChevronRight className="w-3 h-3 text-zinc-400 shrink-0" />}
                             </button>
+                            {isWrite && (
+                              <div className="hidden group-hover/svc:flex items-center gap-0.5 ml-1 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setApiKeysInitialServiceId(service.id);
+                                    setShowApiKeysModal(true);
+                                  }}
+                                  title={`API Key for ${service.name}`}
+                                  className="p-1 rounded text-zinc-400 hover:text-zinc-800 hover:bg-zinc-200 transition-all"
+                                >
+                                  <Key className="w-3 h-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDeleteTarget({ type: 'service', id: service.id, name: service.name });
+                                  }}
+                                  title={`Delete service ${service.name}`}
+                                  className="p-1 rounded text-zinc-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            )}
                           </li>
                         );
                       })}
@@ -294,6 +335,18 @@ export default function Sidebar({
               >
                 <Users className="w-3.5 h-3.5 text-zinc-500" />
                 <span>Members & Invites</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowProfileMenu(false);
+                  setApiKeysInitialServiceId(null);
+                  setShowApiKeysModal(true);
+                }}
+                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 transition-colors text-left"
+              >
+                <Key className="w-3.5 h-3.5 text-zinc-500" />
+                <span>API Keys</span>
               </button>
 
               <button
@@ -410,6 +463,17 @@ export default function Sidebar({
           }
         }}
         onClose={() => setDeleteTarget(null)}
+      />
+
+      <ApiKeysModal
+        isOpen={showApiKeysModal}
+        activeOrgId={activeOrgId || null}
+        currentUserRole={currentUserRole}
+        initialServiceId={apiKeysInitialServiceId}
+        onClose={() => {
+          setShowApiKeysModal(false);
+          setApiKeysInitialServiceId(null);
+        }}
       />
     </>
   );

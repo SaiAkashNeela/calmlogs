@@ -1,11 +1,32 @@
 {
   "name": "calmlogs",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Lightweight, zero-friction live log streaming CLI and platform",
   "type": "module",
+  "main": "bin/calmlogs.js",
   "bin": {
-    "calmlogs": "./bin/calmlogs.js"
+    "calmlogs": "bin/calmlogs.js"
   },
+  "files": [
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "author": "Sai Akash Neela",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saiakashneela/calmlogs.git"
+  },
+  "keywords": [
+    "logging",
+    "logs",
+    "docker",
+    "calmlogs",
+    "cli",
+    "streaming",
+    "realtime"
+  ],
   "scripts": {
     "dev": "npm run wrangler:dev & tsx server.ts",
     "wrangler:dev": "npx --yes kill-port 8787 && wrangler dev --port 8787",

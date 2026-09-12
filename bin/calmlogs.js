@@ -58,7 +58,7 @@ const key = getArg(
 );
 const endpoint = getArg(
   ['--endpoint', '-e'],
-  process.env.CALMLOGS_ENDPOINT || 'http://localhost:3000'
+  process.env.CALMLOGS_ENDPOINT || 'https://calmlogs.mrsan.workers.dev'
 );
 
 const networkFilter = getArg(['--network', '-n']);

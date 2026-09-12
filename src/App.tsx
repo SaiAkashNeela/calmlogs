@@ -308,6 +308,7 @@ export default function App() {
             projectName={activeProject?.name}
             serviceName={activeService?.name}
             isWrite={isWrite}
+            activeOrgId={activeOrgId}
             onServiceDeleted={handleServiceDeleted}
           />
         ) : projects.length === 0 ? (

@@ -18,8 +18,10 @@ import {
   BarChart2,
   PieChart,
   TrendingUp,
+  Key
 } from 'lucide-react';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
+import ApiKeysModal from './ApiKeysModal';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -35,6 +37,7 @@ interface LogViewerProps {
   projectName?: string;
   serviceName?: string;
   isWrite?: boolean;
+  activeOrgId?: string | null;
   onServiceDeleted?: (serviceId: string) => void;
 }
 
@@ -44,6 +47,7 @@ export default function LogViewer({
   projectName,
   serviceName,
   isWrite = true,
+  activeOrgId,
   onServiceDeleted
 }: LogViewerProps) {
   const [logs, setLogs] = useState<LogEvent[]>([]);
@@ -55,6 +59,7 @@ export default function LogViewer({
   const [activeLevels, setActiveLevels] = useState<Set<LogLevel>>(new Set(['debug', 'info', 'warn', 'error']));
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showDeleteServiceModal, setShowDeleteServiceModal] = useState(false);
+  const [showApiKeysModal, setShowApiKeysModal] = useState(false);
   const [showCharts, setShowCharts] = useState(true);
   
   const wsRef = useRef<WebSocket | null>(null);
@@ -341,6 +346,16 @@ export default function LogViewer({
               <Download className="w-3.5 h-3.5" />
             </button>
 
+            {/* API Key Management */}
+            <button
+              onClick={() => setShowApiKeysModal(true)}
+              title={`API Key for ${serviceName || serviceId}`}
+              className="p-1.5 rounded-md bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50 transition-colors flex items-center gap-1 text-xs font-mono"
+            >
+              <Key className="w-3.5 h-3.5 text-zinc-500" />
+              <span className="hidden sm:inline">API Key</span>
+            </button>
+
             {/* Delete Service Button in Top Right */}
             {isWrite && (
               <>
@@ -609,6 +624,15 @@ export default function LogViewer({
         description="All indexed logs for this service will be permanently deleted."
         onConfirm={handleDeleteService}
         onClose={() => setShowDeleteServiceModal(false)}
+      />
+
+      {/* API Keys Modal */}
+      <ApiKeysModal
+        isOpen={showApiKeysModal}
+        activeOrgId={activeOrgId || null}
+        currentUserRole={isWrite ? 'write' : 'read'}
+        initialServiceId={serviceId}
+        onClose={() => setShowApiKeysModal(false)}
       />
     </div>
   );
