@@ -172,19 +172,24 @@ export default function LogViewer({
     if (!streamContainerRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = streamContainerRef.current;
     const isAtBottom = scrollHeight - scrollTop - clientHeight < 30;
-    if (isAtBottom && !autoScroll) {
-      setAutoScroll(true);
-    } else if (!isAtBottom && autoScroll) {
+    // When user scrolls up away from bottom, gently pause autoScroll so screen doesn't jump
+    if (!isAtBottom && autoScroll) {
       setAutoScroll(false);
     }
   };
 
   const handleToggleAutoScroll = () => {
-    const next = !autoScroll;
-    setAutoScroll(next);
-    if (next && streamContainerRef.current) {
-      streamContainerRef.current.scrollTop = streamContainerRef.current.scrollHeight;
-    }
+    setAutoScroll(prev => {
+      const next = !prev;
+      if (next && streamContainerRef.current) {
+        requestAnimationFrame(() => {
+          if (streamContainerRef.current) {
+            streamContainerRef.current.scrollTop = streamContainerRef.current.scrollHeight;
+          }
+        });
+      }
+      return next;
+    });
   };
 
   const filteredLogs = logs.filter(l => {
@@ -522,11 +527,18 @@ export default function LogViewer({
           <div className="flex items-center gap-3">
             <button
               onClick={handleToggleAutoScroll}
+              title={autoScroll ? "Auto-scroll is ON (click to turn OFF)" : "Auto-scroll is OFF (click to scroll to bottom & turn ON)"}
               className={cn(
-                "flex items-center gap-1 hover:text-zinc-800 transition-colors",
-                autoScroll ? "text-emerald-600 font-medium" : "text-zinc-500"
+                "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-mono border transition-all cursor-pointer select-none",
+                autoScroll
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 font-semibold shadow-2xs"
+                  : "bg-zinc-100 text-zinc-600 border-zinc-200 hover:bg-zinc-200 hover:text-zinc-900 font-normal"
               )}
             >
+              <span className={cn(
+                "w-1.5 h-1.5 rounded-full shrink-0",
+                autoScroll ? "bg-emerald-500 animate-pulse" : "bg-zinc-400"
+              )} />
               <ArrowDown className="w-3 h-3" />
               <span>Auto-scroll {autoScroll ? 'ON' : 'OFF'}</span>
             </button>
