@@ -157,6 +157,19 @@ export default function LogViewer({
     };
   }, [projectId, serviceId, fetchHistorical, connectWs]);
 
+  const filteredLogs = logs.filter(l => {
+    const levelMatch = activeLevels.has(l.level);
+    if (!levelMatch) return false;
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      (l.message && l.message.toLowerCase().includes(query)) ||
+      (l.event && l.event.toLowerCase().includes(query)) ||
+      (l.request_id && l.request_id.toLowerCase().includes(query)) ||
+      (l.trace_id && l.trace_id.toLowerCase().includes(query))
+    );
+  });
+
   // Scroll handling: auto-scroll to bottom like standard terminal
   useEffect(() => {
     if (autoScroll && streamContainerRef.current) {
@@ -191,19 +204,6 @@ export default function LogViewer({
       return next;
     });
   };
-
-  const filteredLogs = logs.filter(l => {
-    const levelMatch = activeLevels.has(l.level);
-    if (!levelMatch) return false;
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      (l.message && l.message.toLowerCase().includes(query)) ||
-      (l.event && l.event.toLowerCase().includes(query)) ||
-      (l.request_id && l.request_id.toLowerCase().includes(query)) ||
-      (l.trace_id && l.trace_id.toLowerCase().includes(query))
-    );
-  });
 
   const levelCounts = logs.reduce<Record<LogLevel, number>>(
     (acc, l) => {
