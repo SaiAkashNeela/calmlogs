@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { authClient } from '../lib/auth-client';
-import { Building, Plus, Check, Loader2 } from 'lucide-react';
+import { Building, Plus, Check, Loader2, X } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -8,7 +8,13 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export default function OrganizationSelect({ onComplete }: { onComplete: () => void }) {
+interface OrganizationSelectProps {
+  onComplete: () => void;
+  onClose?: () => void;
+  isModal?: boolean;
+}
+
+export default function OrganizationSelect({ onComplete, onClose, isModal = false }: OrganizationSelectProps) {
   const [organizations, setOrganizations] = useState<any[]>([]);
   const [userInvitations, setUserInvitations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +24,17 @@ export default function OrganizationSelect({ onComplete }: { onComplete: () => v
   const [newOrgSlug, setNewOrgSlug] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!onClose) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   useEffect(() => {
     fetchOrgs();
@@ -43,10 +60,18 @@ export default function OrganizationSelect({ onComplete }: { onComplete: () => v
   const handleAcceptInvite = async (invitationId: string) => {
     setActionLoading(invitationId);
     try {
-      await authClient.organization.acceptInvitation({ invitationId });
-      await fetchOrgs();
-      onComplete();
-    } catch (e) {}
+      const res = await authClient.organization.acceptInvitation({ invitationId });
+      const targetOrg = userInvitations.find(i => i.id === invitationId);
+      const targetOrgId = res.data?.invitation?.organizationId || res.data?.member?.organizationId || targetOrg?.organizationId || targetOrg?.organization?.id;
+      if (targetOrgId) {
+        await handleSelect(targetOrgId);
+      } else {
+        await fetchOrgs();
+        onComplete();
+      }
+    } catch (e) {
+      console.error('Failed to accept invitation:', e);
+    }
     setActionLoading(null);
   };
 
@@ -86,158 +111,183 @@ export default function OrganizationSelect({ onComplete }: { onComplete: () => v
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fbfbfa] text-zinc-500 font-mono text-xs">
+      <div className={cn(
+        "flex items-center justify-center text-zinc-500 font-mono text-xs",
+        isModal ? "p-12 bg-white rounded-2xl border border-zinc-200 shadow-2xl" : "min-h-screen bg-[#fbfbfa]"
+      )}>
         <Loader2 className="w-4 h-4 animate-spin text-zinc-500 mr-2" />
         <span>Loading workspaces...</span>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[#fbfbfa] text-zinc-900 py-12 px-4 sm:px-6 lg:px-8 selection:bg-zinc-200">
-      <div className="max-w-md w-full space-y-6 bg-white p-8 rounded-2xl border border-zinc-200 shadow-xl shadow-zinc-200/50">
-        <div className="flex flex-col items-center text-center">
-          <div className="w-12 h-12 bg-zinc-100 rounded-xl flex items-center justify-center mb-4 border border-zinc-200 text-zinc-800">
-            <Building className="w-5 h-5" />
-          </div>
-          <h2 className="text-2xl font-bold font-sans tracking-tight text-zinc-900">
-            {showCreate || organizations.length === 0 ? 'Create Workspace' : 'Select Workspace'}
-          </h2>
-          <p className="mt-1 text-xs text-zinc-500 font-mono">
-            {showCreate || organizations.length === 0 ? 'Create a workspace to organize your projects and services' : 'Choose a workspace to continue'}
-          </p>
-        </div>
+  const content = (
+    <div className={cn(
+      "relative max-w-md w-full space-y-6 bg-white p-8 rounded-2xl border border-zinc-200 shadow-xl shadow-zinc-200/50",
+      isModal && "shadow-2xl animate-in zoom-in-95"
+    )}>
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-5 right-5 p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
 
-        {/* Pending user invitations */}
-        {userInvitations.length > 0 && (
-          <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl space-y-2 text-left">
-            <span className="text-[11px] font-semibold text-zinc-600 uppercase tracking-wider font-mono">
-              Invitations for you ({userInvitations.length})
-            </span>
-            <div className="space-y-2">
-              {userInvitations.map(inv => (
-                <div key={inv.id} className="p-2.5 bg-white border border-zinc-200 rounded-lg flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-xs text-zinc-900 font-sans">
-                      {inv.organization?.name || inv.organizationName || 'Workspace'}
-                    </p>
-                    <p className="text-[10px] text-zinc-500 font-mono">
-                      Role: <strong className="uppercase text-zinc-700">{inv.role || 'read'}</strong>
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1.5 font-mono text-xs">
-                    <button
-                      onClick={() => handleAcceptInvite(inv.id)}
-                      disabled={actionLoading === inv.id}
-                      className="px-2.5 py-1 bg-zinc-900 text-white rounded text-[11px] font-medium hover:bg-zinc-800 transition-colors"
-                    >
-                      {actionLoading === inv.id ? 'Joining...' : 'Accept'}
-                    </button>
-                    <button
-                      onClick={() => handleRejectInvite(inv.id)}
-                      disabled={actionLoading === inv.id}
-                      className="px-2 py-1 text-zinc-500 hover:text-zinc-800 rounded text-[11px] hover:bg-zinc-100 transition-colors"
-                    >
-                      Decline
-                    </button>
-                  </div>
+      <div className="flex flex-col items-center text-center">
+        <div className="w-12 h-12 bg-zinc-100 rounded-xl flex items-center justify-center mb-4 border border-zinc-200 text-zinc-800">
+          <Building className="w-5 h-5" />
+        </div>
+        <h2 className="text-2xl font-bold font-sans tracking-tight text-zinc-900">
+          {showCreate || organizations.length === 0 ? 'Create Workspace' : 'Select Workspace'}
+        </h2>
+        <p className="mt-1 text-xs text-zinc-500 font-mono">
+          {showCreate || organizations.length === 0 ? 'Create a workspace to organize your projects and services' : 'Choose a workspace to continue'}
+        </p>
+      </div>
+
+      {/* Pending user invitations */}
+      {userInvitations.length > 0 && (
+        <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl space-y-2 text-left">
+          <span className="text-[11px] font-semibold text-zinc-600 uppercase tracking-wider font-mono">
+            Invitations for you ({userInvitations.length})
+          </span>
+          <div className="space-y-2">
+            {userInvitations.map(inv => (
+              <div key={inv.id} className="p-2.5 bg-white border border-zinc-200 rounded-lg flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-xs text-zinc-900 font-sans">
+                    {inv.organization?.name || inv.organizationName || 'Workspace'}
+                  </p>
+                  <p className="text-[10px] text-zinc-500 font-mono">
+                    Role: <strong className="uppercase text-zinc-700">{inv.role || 'read'}</strong>
+                  </p>
                 </div>
-              ))}
+                <div className="flex items-center gap-1.5 font-mono text-xs">
+                  <button
+                    onClick={() => handleAcceptInvite(inv.id)}
+                    disabled={actionLoading === inv.id}
+                    className="px-2.5 py-1 bg-zinc-900 text-white rounded text-[11px] font-medium hover:bg-zinc-800 transition-colors"
+                  >
+                    {actionLoading === inv.id ? 'Joining...' : 'Accept'}
+                  </button>
+                  <button
+                    onClick={() => handleRejectInvite(inv.id)}
+                    disabled={actionLoading === inv.id}
+                    className="px-2 py-1 text-zinc-500 hover:text-zinc-800 rounded text-[11px] hover:bg-zinc-100 transition-colors"
+                  >
+                    Decline
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {(!showCreate && organizations.length > 0) ? (
+        <div className="mt-6 space-y-2.5">
+          {organizations.map(org => (
+            <button
+              key={org.id}
+              onClick={() => handleSelect(org.id)}
+              className={cn(
+                "w-full flex items-center justify-between p-3.5 rounded-xl border transition-all text-left",
+                activeOrgId === org.id 
+                  ? "border-zinc-900 bg-zinc-50 ring-1 ring-zinc-900 shadow-xs" 
+                  : "border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50/80"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-800 font-mono font-semibold text-sm">
+                  {org.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-semibold text-sm text-zinc-900 font-sans">{org.name}</p>
+                  <p className="text-[11px] text-zinc-500 font-mono">{org.slug}</p>
+                </div>
+              </div>
+              {activeOrgId === org.id && <Check className="w-4 h-4 text-zinc-900" />}
+            </button>
+          ))}
+          
+          <button
+            onClick={() => setShowCreate(true)}
+            className="w-full flex items-center gap-2 justify-center p-3 rounded-xl border border-dashed border-zinc-300 text-zinc-600 hover:text-zinc-900 hover:border-zinc-400 hover:bg-zinc-50 transition-all text-xs font-mono mt-4"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Create New Workspace</span>
+          </button>
+        </div>
+      ) : (
+        <form className="mt-6 space-y-4" onSubmit={handleCreate}>
+          <div className="space-y-3 font-mono">
+            <div>
+              <label className="block text-[11px] font-semibold text-zinc-700 uppercase tracking-wider mb-1.5">
+                Workspace Name
+              </label>
+              <input
+                type="text"
+                required
+                autoFocus
+                className="w-full px-3 py-2 text-xs bg-zinc-50 border border-zinc-300 rounded-lg text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-500 focus:bg-white focus:ring-1 focus:ring-zinc-400/20 transition-all font-sans"
+                placeholder="e.g. Acme Production"
+                value={newOrgName}
+                onChange={(e) => {
+                  setNewOrgName(e.target.value);
+                  setNewOrgSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-'));
+                }}
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-zinc-700 uppercase tracking-wider mb-1.5">
+                Workspace Slug
+              </label>
+              <input
+                type="text"
+                required
+                className="w-full px-3 py-2 text-xs bg-zinc-50 border border-zinc-300 rounded-lg text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-zinc-500 focus:bg-white focus:ring-1 focus:ring-zinc-400/20 transition-all"
+                placeholder="acme-prod"
+                value={newOrgSlug}
+                onChange={(e) => setNewOrgSlug(e.target.value)}
+              />
             </div>
           </div>
-        )}
-        
-        {(!showCreate && organizations.length > 0) ? (
-          <div className="mt-6 space-y-2.5">
-            {organizations.map(org => (
+
+          <div className="flex gap-2.5 pt-2 font-mono text-xs">
+            {organizations.length > 0 && (
               <button
-                key={org.id}
-                onClick={() => handleSelect(org.id)}
-                className={cn(
-                  "w-full flex items-center justify-between p-3.5 rounded-xl border transition-all text-left",
-                  activeOrgId === org.id 
-                    ? "border-zinc-900 bg-zinc-50 ring-1 ring-zinc-900 shadow-xs" 
-                    : "border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50/80"
-                )}
+                type="button"
+                onClick={() => setShowCreate(false)}
+                className="flex-1 rounded-lg bg-zinc-100 border border-zinc-200 px-3 py-2.5 font-medium text-zinc-700 hover:bg-zinc-200 transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-800 font-mono font-semibold text-sm">
-                    {org.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm text-zinc-900 font-sans">{org.name}</p>
-                    <p className="text-[11px] text-zinc-500 font-mono">{org.slug}</p>
-                  </div>
-                </div>
-                {activeOrgId === org.id && <Check className="w-4 h-4 text-zinc-900" />}
+                Cancel
               </button>
-            ))}
-            
+            )}
             <button
-              onClick={() => setShowCreate(true)}
-              className="w-full flex items-center gap-2 justify-center p-3 rounded-xl border border-dashed border-zinc-300 text-zinc-600 hover:text-zinc-900 hover:border-zinc-400 hover:bg-zinc-50 transition-all text-xs font-mono mt-4"
+              type="submit"
+              disabled={createLoading || !newOrgName.trim()}
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-zinc-900 px-3 py-2.5 font-sans font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
             >
-              <Plus className="w-4 h-4" />
-              <span>Create New Workspace</span>
+              {createLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>{createLoading ? 'Creating...' : 'Create Workspace'}</span>
             </button>
           </div>
-        ) : (
-          <form className="mt-6 space-y-4" onSubmit={handleCreate}>
-            <div className="space-y-3 font-mono">
-              <div>
-                <label className="block text-[11px] font-semibold text-zinc-700 uppercase tracking-wider mb-1.5">
-                  Workspace Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  autoFocus
-                  className="w-full px-3 py-2 text-xs bg-zinc-50 border border-zinc-300 rounded-lg text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-zinc-500 focus:bg-white focus:ring-1 focus:ring-zinc-400/20 transition-all font-sans"
-                  placeholder="e.g. Acme Production"
-                  value={newOrgName}
-                  onChange={(e) => {
-                    setNewOrgName(e.target.value);
-                    setNewOrgSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-'));
-                  }}
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-semibold text-zinc-700 uppercase tracking-wider mb-1.5">
-                  Workspace Slug
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="w-full px-3 py-2 text-xs bg-zinc-50 border border-zinc-300 rounded-lg text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-zinc-500 focus:bg-white focus:ring-1 focus:ring-zinc-400/20 transition-all"
-                  placeholder="acme-prod"
-                  value={newOrgSlug}
-                  onChange={(e) => setNewOrgSlug(e.target.value)}
-                />
-              </div>
-            </div>
+        </form>
+      )}
+    </div>
+  );
 
-            <div className="flex gap-2.5 pt-2 font-mono text-xs">
-              {organizations.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setShowCreate(false)}
-                  className="flex-1 rounded-lg bg-zinc-100 border border-zinc-200 px-3 py-2.5 font-medium text-zinc-700 hover:bg-zinc-200 transition-colors"
-                >
-                  Cancel
-                </button>
-              )}
-              <button
-                type="submit"
-                disabled={createLoading || !newOrgName.trim()}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-zinc-900 px-3 py-2.5 font-sans font-semibold text-white hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
-              >
-                {createLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                <span>{createLoading ? 'Creating...' : 'Create Workspace'}</span>
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
+  if (isModal) {
+    return content;
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#fbfbfa] text-zinc-900 py-12 px-4 sm:px-6 lg:px-8 selection:bg-zinc-200">
+      {content}
     </div>
   );
 }

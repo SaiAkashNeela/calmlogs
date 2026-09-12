@@ -25,6 +25,7 @@ export default function App() {
   const [activeServiceId, setActiveServiceId] = useState<string | null>(null);
 
   const [showCreateProject, setShowCreateProject] = useState(false);
+  const [showSwitchWorkspace, setShowSwitchWorkspace] = useState(false);
   const [serviceModalTarget, setServiceModalTarget] = useState<Project | null>(null);
   const [copied, setCopied] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
@@ -32,6 +33,7 @@ export default function App() {
   // Invitation Prompt State
   const [inviteModalData, setInviteModalData] = useState<{
     invitationId: string;
+    organizationId?: string;
     orgName?: string;
     role?: string;
   } | null>(null);
@@ -46,7 +48,8 @@ export default function App() {
         const invRes = await authClient.organization.getInvitation({ query: { id: invitationId } } as any);
         const orgName = invRes.data?.organizationName || 'Workspace';
         const role = invRes.data?.role || 'read';
-        setInviteModalData({ invitationId, orgName, role });
+        const organizationId = invRes.data?.organizationId;
+        setInviteModalData({ invitationId, organizationId, orgName, role });
       } catch (e) {
         setInviteModalData({ invitationId, orgName: 'Workspace', role: 'member' });
       }
@@ -57,7 +60,12 @@ export default function App() {
     if (!inviteModalData) return;
     setInviteActionLoading(true);
     try {
-      await authClient.organization.acceptInvitation({ invitationId: inviteModalData.invitationId });
+      const res = await authClient.organization.acceptInvitation({ invitationId: inviteModalData.invitationId });
+      const targetOrgId = res.data?.invitation?.organizationId || res.data?.member?.organizationId || inviteModalData.organizationId;
+      if (targetOrgId) {
+        await authClient.organization.setActive({ organizationId: targetOrgId });
+        setActiveOrgId(targetOrgId);
+      }
       window.history.replaceState({}, '', window.location.pathname);
       setInviteModalData(null);
       await checkSession();
@@ -257,7 +265,7 @@ export default function App() {
     return <AuthScreen onLogin={checkSession} />;
   }
 
-  if (!activeOrgId) {
+  if (!activeOrgId && !inviteModalData) {
     return <OrganizationSelect onComplete={checkSession} />;
   }
 
@@ -288,7 +296,7 @@ export default function App() {
         onServiceCreated={handleServiceCreated}
         onProjectDeleted={handleProjectDeleted}
         onServiceDeleted={handleServiceDeleted}
-        onSwitchWorkspace={() => setActiveOrgId(null)}
+        onSwitchWorkspace={() => setShowSwitchWorkspace(true)}
       />
       
       {/* Main Viewport */}
@@ -469,6 +477,25 @@ export default function App() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Switch Workspace Modal */}
+      {showSwitchWorkspace && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowSwitchWorkspace(false);
+          }}
+        >
+          <OrganizationSelect 
+            isModal={true}
+            onComplete={() => {
+              setShowSwitchWorkspace(false);
+              checkSession();
+            }}
+            onClose={() => setShowSwitchWorkspace(false)}
+          />
         </div>
       )}
     </div>
