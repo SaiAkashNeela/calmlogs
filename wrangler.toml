@@ -46,3 +46,13 @@ new_sqlite_classes = ["RealtimeLogStream"]
 #    - Authorized redirect URIs (OAuth Redirect):
 #      Local:      http://localhost:3000/api/auth/callback/google
 #      Production: https://<your-worker-subdomain>.workers.dev/api/auth/callback/google
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+persist = true
+
+[observability.traces]
+enabled = false
+head_sampling_rate = 1
+persist = true
