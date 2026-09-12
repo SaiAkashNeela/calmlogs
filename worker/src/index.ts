@@ -5,6 +5,7 @@ export interface Env {
   DB: D1Database;
   LOG_BUCKET: R2Bucket;
   REALTIME: DurableObjectNamespace;
+  ASSETS?: Fetcher;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
 }
@@ -618,6 +619,10 @@ export default {
       return stub.fetch(new Request(url.toString(), {
         headers: request.headers
       }));
+    }
+
+    if (env.ASSETS) {
+      return env.ASSETS.fetch(request);
     }
 
     return addCors(new Response("Not found", { status: 404 }));
